@@ -14,6 +14,7 @@ create table if not exists public.readings (
   value numeric not null,
   unit text not null,
   reading_date timestamptz not null default now(),
+  reading_datetime_local timestamp not null default (now() at time zone 'Europe/Paris'),
   note text,
   created_at timestamptz not null default now()
 );
@@ -46,6 +47,19 @@ using reading_date::timestamptz;
 
 alter table public.readings
 alter column reading_date set default now();
+
+alter table public.readings
+add column if not exists reading_datetime_local timestamp;
+
+update public.readings
+set reading_datetime_local = reading_date at time zone 'Europe/Paris'
+where reading_datetime_local is null;
+
+alter table public.readings
+alter column reading_datetime_local set default (now() at time zone 'Europe/Paris');
+
+alter table public.readings
+alter column reading_datetime_local set not null;
 
 create or replace function public.handle_new_user()
 returns trigger

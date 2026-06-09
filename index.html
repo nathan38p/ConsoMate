@@ -815,8 +815,20 @@
         readingValueInput.required = type !== "water";
       }
 
+      function normalizeLocalDatetime(value) {
+        if (!value) {
+          return value;
+        }
+
+        return value.includes("T") ? value : value.replace(" ", "T");
+      }
+
+      function getReadingDatetime(reading) {
+        return normalizeLocalDatetime(reading.reading_datetime_local || reading.reading_date);
+      }
+
       function formatReadingDate(value) {
-        const date = new Date(value);
+        const date = new Date(normalizeLocalDatetime(value));
         if (Number.isNaN(date.getTime())) {
           return value;
         }
@@ -843,6 +855,10 @@
       function changeGraphMonth(offset) {
         selectedGraphMonth = new Date(selectedGraphMonth.getFullYear(), selectedGraphMonth.getMonth() + offset, 1);
         renderGraph(graphReadings);
+      }
+
+      function formatLocalDatetimeForDatabase(value) {
+        return value.length === 16 ? `${value}:00` : value;
       }
 
       function parseReadingValue(value) {
@@ -928,7 +944,7 @@
         groupedReadings.forEach((ownerReadings) => {
           ownerReadings
             .sort((a, b) => {
-              const readingDateDiff = new Date(a.reading_date) - new Date(b.reading_date);
+              const readingDateDiff = new Date(getReadingDatetime(a)) - new Date(getReadingDatetime(b));
               if (readingDateDiff !== 0) {
                 return readingDateDiff;
               }
@@ -936,7 +952,7 @@
               return new Date(a.created_at) - new Date(b.created_at);
             })
             .forEach((reading, index, sortedReadings) => {
-              const readingDate = new Date(reading.reading_date);
+              const readingDate = new Date(getReadingDatetime(reading));
               if (readingDate < monthStart || readingDate >= monthEnd || index === 0) {
                 return;
               }
@@ -1147,7 +1163,8 @@
           return;
         }
 
-        const readingDate = new Date(document.getElementById("reading-date").value);
+        const readingDateInput = document.getElementById("reading-date").value;
+        const readingDate = new Date(readingDateInput);
         if (Number.isNaN(readingDate.getTime())) {
           setMessage(readingMessage, "La date et l’heure du relevé sont obligatoires.", "error");
           return;
@@ -1159,6 +1176,7 @@
           value: getReadingValue(),
           unit: getReadingUnit(selectedReadingType),
           reading_date: readingDate.toISOString(),
+          reading_datetime_local: formatLocalDatetimeForDatabase(readingDateInput),
           note: null
         };
 
@@ -1193,6 +1211,7 @@
           .from("readings")
           .select("*")
           .in("user_id", sharedUserIds)
+          .order("reading_datetime_local", { ascending: false, nullsFirst: false })
           .order("reading_date", { ascending: false })
           .order("created_at", { ascending: false })
           .limit(500);
@@ -1224,7 +1243,7 @@
               <article class="reading-item">
                 <div>
                   <strong>${typeLabel} — ${escapeHtml(reading.value)} ${escapeHtml(reading.unit)}<span class="owner-pill">${escapeHtml(ownerLabel)}</span></strong>
-                  <div class="reading-date">${escapeHtml(formatReadingDate(reading.reading_date))}</div>
+                  <div class="reading-date">${escapeHtml(formatReadingDate(getReadingDatetime(reading)))}</div>
                 </div>
                 <div class="reading-footer">
                   ${deleteButton}
