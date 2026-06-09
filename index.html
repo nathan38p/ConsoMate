@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ConsoMate</title>
+    <style>
+      :root {
+        --bg: #f5f7fb;
+        --card: #ffffff;
+        --text: #172033;
+        --muted: #64748b;
+        --accent: #2563eb;
+        --accent-dark: #1d4ed8;
+        --danger: #dc2626;
+        --success: #15803d;
+        --border: #e2e8f0;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: linear-gradient(135deg, #eff6ff 0%, var(--bg) 100%);
+        color: var(--text);
+      }
+
+      .container {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 32px 16px 60px;
+      }
+
+      .hero {
+        margin-bottom: 24px;
+      }
+
+      .hero h1 {
+        margin: 0 0 8px;
+        font-size: 2rem;
+      }
+
+      .hero p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 14px 40px rgba(15, 23, 42, 0.06);
+        margin-bottom: 18px;
+      }
+
+      .card h2 {
+        margin-top: 0;
+        margin-bottom: 16px;
+        font-size: 1.1rem;
+      }
+
+      form {
+        display: grid;
+        gap: 12px;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-weight: 600;
+        color: var(--text);
+      }
+
+      input,
+      select,
+      textarea,
+      button {
+        font: inherit;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #fcfdff;
+        color: var(--text);
+      }
+
+      textarea {
+        min-height: 88px;
+        resize: vertical;
+      }
+
+      .actions,
+      .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+      }
+
+      button {
+        border: none;
+        border-radius: 999px;
+        padding: 10px 16px;
+        cursor: pointer;
+        transition: transform 0.15s ease, background 0.15s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      button.primary {
+        background: var(--accent);
+        color: white;
+      }
+
+      button.primary:hover {
+        background: var(--accent-dark);
+      }
+
+      button.secondary {
+        background: #e2e8f0;
+        color: var(--text);
+      }
+
+      button.ghost {
+        background: transparent;
+        color: var(--accent);
+        padding-left: 0;
+      }
+
+      .hint,
+      .message,
+      .empty-state {
+        font-size: 0.95rem;
+        color: var(--muted);
+      }
+
+      .message.success {
+        color: var(--success);
+      }
+
+      .message.error {
+        color: var(--danger);
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .settings-panel {
+        border-top: 1px solid var(--border);
+        margin-top: 18px;
+        padding-top: 18px;
+      }
+
+      .settings-panel h3 {
+        margin: 0 0 12px;
+        font-size: 1rem;
+      }
+
+      .mate-list {
+        display: grid;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .mate-item {
+        align-items: center;
+        background: #f8fafc;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 12px;
+      }
+
+      .owner-pill {
+        background: #e0f2fe;
+        border-radius: 999px;
+        color: #0369a1;
+        display: inline-block;
+        font-size: 0.8rem;
+        font-weight: 700;
+        margin-left: 6px;
+        padding: 2px 8px;
+      }
+
+      .reading-item {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 12px 14px;
+        margin-top: 10px;
+        background: #fcfdff;
+      }
+
+      .reading-item strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .reading-meta {
+        color: var(--muted);
+        font-size: 0.92rem;
+        margin-top: 4px;
+      }
+
+      @media (max-width: 640px) {
+        .container {
+          padding: 20px 12px 40px;
+        }
+
+        .card {
+          padding: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <header class="hero">
+        <h1>ConsoMate</h1>
+        <p>Connectez-vous, ajoutez vos relevés d’eau et d’électricité, et gardez une trace simple de vos consommations.</p>
+      </header>
+
+      <section class="card" id="auth-card">
+        <h2>Connexion</h2>
+        <form id="auth-form">
+          <label>
+            E-mail
+            <input id="auth-email" type="email" required />
+          </label>
+          <label>
+            Mot de passe
+            <input id="auth-password" type="password" minlength="6" required />
+          </label>
+          <div class="actions">
+            <button type="submit" id="auth-submit-btn" class="primary">Se connecter</button>
+            <button type="button" id="signup-btn" class="secondary">Créer un compte</button>
+          </div>
+        </form>
+        <p id="auth-message" class="message"></p>
+      </section>
+
+      <section class="card hidden" id="app-card">
+        <div class="toolbar">
+          <h2 style="margin: 0; flex: 1">Ajouter un relevé</h2>
+          <button type="button" id="settings-btn" class="secondary">Réglages</button>
+          <button type="button" id="logout-btn" class="secondary">Se déconnecter</button>
+        </div>
+
+        <div id="settings-panel" class="settings-panel hidden">
+          <h3>Mates</h3>
+          <form id="mate-form">
+            <label>
+              E-mail du mate
+              <input id="mate-email" type="email" placeholder="mate@example.com" required />
+            </label>
+            <div class="actions">
+              <button type="submit" class="primary">Ajouter</button>
+            </div>
+          </form>
+          <p class="hint">Les relevés sont partagés avec les mates ajoutés ici.</p>
+          <p id="mate-message" class="message"></p>
+          <div id="mates-list" class="mate-list empty-state">Aucun mate ajouté pour le moment.</div>
+        </div>
+
+        <form id="reading-form">
+          <label>
+            Type
+            <select id="reading-type">
+              <option value="water">Eau</option>
+              <option value="electricity">Électricité</option>
+            </select>
+          </label>
+          <label>
+            Date du relevé
+            <input id="reading-date" type="date" required />
+          </label>
+          <label>
+            Valeur
+            <input id="reading-value" type="number" step="0.01" min="0" required />
+          </label>
+          <label>
+            Unité
+            <input id="reading-unit" type="text" placeholder="m³ ou kWh" required />
+          </label>
+          <label>
+            Note
+            <textarea id="reading-note" placeholder="Optionnel"></textarea>
+          </label>
+          <div class="actions">
+            <button type="submit" class="primary">Enregistrer</button>
+          </div>
+        </form>
+
+        <p id="reading-message" class="message"></p>
+
+        <h3 style="margin: 20px 0 8px">Derniers relevés partagés</h3>
+        <div id="readings-list" class="empty-state">Chargement…</div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      const DEFAULT_SUPABASE_URL = "https://jjafxjyrnysujgwwtkte.supabase.co";
+      const DEFAULT_SUPABASE_KEY = "sb_publishable_KZqc80abiojlxzIe5cnJew_-L2IPfvX";
+
+      let supabaseClient = null;
+      let currentSession = null;
+      let authMode = "signin";
+      let sharedUserIds = [];
+      let profileEmailsById = {};
+
+      const authForm = document.getElementById("auth-form");
+      const authMessage = document.getElementById("auth-message");
+      const authSubmitBtn = document.getElementById("auth-submit-btn");
+      const signupBtn = document.getElementById("signup-btn");
+      const settingsBtn = document.getElementById("settings-btn");
+      const settingsPanel = document.getElementById("settings-panel");
+      const mateForm = document.getElementById("mate-form");
+      const mateEmail = document.getElementById("mate-email");
+      const mateMessage = document.getElementById("mate-message");
+      const matesList = document.getElementById("mates-list");
+      const logoutBtn = document.getElementById("logout-btn");
+      const readingForm = document.getElementById("reading-form");
+      const readingMessage = document.getElementById("reading-message");
+      const readingsList = document.getElementById("readings-list");
+      const authCard = document.getElementById("auth-card");
+      const appCard = document.getElementById("app-card");
+
+      function setMessage(element, text, type = "") {
+        element.textContent = text;
+        element.className = `message ${type}`.trim();
+      }
+
+      function setAppVisible(isLoggedIn) {
+        authCard.classList.toggle("hidden", isLoggedIn);
+        appCard.classList.toggle("hidden", !isLoggedIn);
+      }
+
+      function getTodayString() {
+        return new Date().toISOString().slice(0, 10);
+      }
+
+      function initDefaultDate() {
+        document.getElementById("reading-date").value = getTodayString();
+      }
+
+      async function initSupabaseClient() {
+        const url = DEFAULT_SUPABASE_URL;
+        const key = DEFAULT_SUPABASE_KEY;
+
+        if (!url || !key) {
+          setMessage(authMessage, "Les identifiants Supabase sont introuvables.", "error");
+          setAppVisible(false);
+          return;
+        }
+
+        supabaseClient = window.supabase.createClient(url, key, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+          }
+        });
+
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        currentSession = sessionData.session;
+
+        supabaseClient.auth.onAuthStateChange((_event, session) => {
+          currentSession = session;
+          setAppVisible(Boolean(session));
+          if (session) {
+            refreshSharedData();
+          }
+        });
+
+        setAppVisible(Boolean(currentSession));
+        if (currentSession) {
+          refreshSharedData();
+        }
+      }
+
+      async function ensureCurrentProfile() {
+        if (!supabaseClient || !currentSession) {
+          return;
+        }
+
+        await supabaseClient.from("profiles").upsert({
+          id: currentSession.user.id,
+          email: currentSession.user.email.toLowerCase()
+        });
+      }
+
+      async function refreshSharedData() {
+        await ensureCurrentProfile();
+        await loadMates();
+        await loadReadings();
+      }
+
+      async function handleAuthSubmit(event) {
+        event.preventDefault();
+        if (!supabaseClient) {
+          setMessage(authMessage, "La connexion Supabase n’est pas prête.", "error");
+          return;
+        }
+
+        const email = document.getElementById("auth-email").value.trim();
+        const password = document.getElementById("auth-password").value;
+
+        if (!email || !password) {
+          setMessage(authMessage, "Saisissez un e-mail et un mot de passe.", "error");
+          return;
+        }
+
+        setMessage(authMessage, "Traitement en cours…", "");
+
+        let response;
+        if (authMode === "signup") {
+          response = await supabaseClient.auth.signUp({ email, password });
+        } else {
+          response = await supabaseClient.auth.signInWithPassword({ email, password });
+        }
+
+        if (response.error) {
+          setMessage(authMessage, response.error.message, "error");
+          return;
+        }
+
+        currentSession = response.data.session;
+        setAppVisible(Boolean(currentSession));
+
+        if (authMode === "signup") {
+          if (currentSession) {
+            setMessage(authMessage, "Compte créé et connecté.", "success");
+          } else {
+            setMessage(authMessage, "Compte créé. Vérifiez votre boîte mail si la confirmation par e-mail est activée.", "success");
+          }
+        } else {
+          setMessage(authMessage, "Connexion réussie.", "success");
+        }
+
+        if (currentSession) {
+          refreshSharedData();
+        }
+      }
+
+      function toggleAuthMode() {
+        authMode = authMode === "signin" ? "signup" : "signin";
+        signupBtn.textContent = authMode === "signin" ? "Créer un compte" : "Retour à la connexion";
+        authSubmitBtn.textContent = authMode === "signin" ? "Se connecter" : "Créer le compte";
+      }
+
+      function toggleSettings() {
+        settingsPanel.classList.toggle("hidden");
+      }
+
+      async function handleMateSubmit(event) {
+        event.preventDefault();
+        if (!supabaseClient || !currentSession) {
+          setMessage(mateMessage, "Connectez-vous pour ajouter un mate.", "error");
+          return;
+        }
+
+        const email = mateEmail.value.trim().toLowerCase();
+        if (!email) {
+          setMessage(mateMessage, "Saisissez l’e-mail du mate.", "error");
+          return;
+        }
+
+        if (email === currentSession.user.email.toLowerCase()) {
+          setMessage(mateMessage, "Vous êtes déjà votre propre mate.", "error");
+          return;
+        }
+
+        setMessage(mateMessage, "Recherche du mate…", "");
+        const { data: profile, error: profileError } = await supabaseClient
+          .from("profiles")
+          .select("id,email")
+          .eq("email", email)
+          .maybeSingle();
+
+        if (profileError) {
+          setMessage(mateMessage, `Impossible de rechercher ce mate : ${profileError.message}`, "error");
+          return;
+        }
+
+        if (!profile) {
+          setMessage(mateMessage, "Aucun compte trouvé avec cet e-mail.", "error");
+          return;
+        }
+
+        const { error } = await supabaseClient.from("mates").upsert({
+          owner_id: currentSession.user.id,
+          mate_id: profile.id
+        });
+
+        if (error) {
+          setMessage(mateMessage, `Impossible d’ajouter ce mate : ${error.message}`, "error");
+          return;
+        }
+
+        mateForm.reset();
+        setMessage(mateMessage, "Mate ajouté. Les relevés sont maintenant partagés.", "success");
+        await refreshSharedData();
+      }
+
+      async function loadMates() {
+        if (!supabaseClient || !currentSession) {
+          matesList.innerHTML = '<p class="empty-state">Connectez-vous pour voir vos mates.</p>';
+          return;
+        }
+
+        const userId = currentSession.user.id;
+        sharedUserIds = [userId];
+        profileEmailsById = {
+          [userId]: currentSession.user.email
+        };
+
+        const { data: mateRows, error } = await supabaseClient
+          .from("mates")
+          .select("id,owner_id,mate_id")
+          .or(`owner_id.eq.${userId},mate_id.eq.${userId}`);
+
+        if (error) {
+          matesList.innerHTML = `<p class="empty-state">Erreur : ${error.message}</p>`;
+          return;
+        }
+
+        const mateIds = [...new Set((mateRows || []).map((row) => (row.owner_id === userId ? row.mate_id : row.owner_id)))];
+        sharedUserIds = [userId, ...mateIds];
+
+        if (mateIds.length === 0) {
+          matesList.innerHTML = '<p class="empty-state">Aucun mate ajouté pour le moment.</p>';
+          return;
+        }
+
+        const { data: profiles, error: profilesError } = await supabaseClient
+          .from("profiles")
+          .select("id,email")
+          .in("id", mateIds);
+
+        if (profilesError) {
+          matesList.innerHTML = `<p class="empty-state">Erreur : ${profilesError.message}</p>`;
+          return;
+        }
+
+        (profiles || []).forEach((profile) => {
+          profileEmailsById[profile.id] = profile.email;
+        });
+
+        matesList.innerHTML = mateIds
+          .map((id) => `<div class="mate-item"><span>${profileEmailsById[id] || id}</span></div>`)
+          .join("");
+      }
+
+      async function handleReadingSubmit(event) {
+        event.preventDefault();
+        if (!supabaseClient || !currentSession) {
+          setMessage(readingMessage, "Vous devez être connecté pour enregistrer un relevé.", "error");
+          return;
+        }
+
+        const payload = {
+          user_id: currentSession.user.id,
+          type: document.getElementById("reading-type").value,
+          value: parseFloat(document.getElementById("reading-value").value),
+          unit: document.getElementById("reading-unit").value.trim(),
+          reading_date: document.getElementById("reading-date").value,
+          note: document.getElementById("reading-note").value.trim() || null
+        };
+
+        if (!payload.value || Number.isNaN(payload.value)) {
+          setMessage(readingMessage, "La valeur du relevé est obligatoire.", "error");
+          return;
+        }
+
+        const { error } = await supabaseClient.from("readings").insert(payload);
+        if (error) {
+          setMessage(readingMessage, `Impossible d’enregistrer le relevé : ${error.message}`, "error");
+          return;
+        }
+
+        readingForm.reset();
+        initDefaultDate();
+        document.getElementById("reading-unit").value = payload.type === "water" ? "m³" : "kWh";
+        setMessage(readingMessage, "Relevé enregistré dans la base Supabase.", "success");
+        loadReadings();
+      }
+
+      async function loadReadings() {
+        if (!supabaseClient || !currentSession) {
+          readingsList.innerHTML = '<p class="empty-state">Connectez-vous pour voir vos relevés.</p>';
+          return;
+        }
+
+        readingsList.innerHTML = '<p class="empty-state">Chargement…</p>';
+        const { data, error } = await supabaseClient
+          .from("readings")
+          .select("*")
+          .in("user_id", sharedUserIds)
+          .order("reading_date", { ascending: false })
+          .limit(10);
+
+        if (error) {
+          readingsList.innerHTML = `<p class="empty-state">Erreur : ${error.message}</p>`;
+          return;
+        }
+
+        if (!data || data.length === 0) {
+          readingsList.innerHTML = '<p class="empty-state">Aucun relevé enregistré pour le moment.</p>';
+          return;
+        }
+
+        readingsList.innerHTML = data
+          .map((reading) => {
+            const typeLabel = reading.type === "water" ? "Eau" : "Électricité";
+            const note = reading.note ? `<div>${reading.note}</div>` : "";
+            const ownerLabel = reading.user_id === currentSession.user.id ? "Moi" : profileEmailsById[reading.user_id] || "Mate";
+            return `
+              <article class="reading-item">
+                <strong>${typeLabel} — ${reading.value} ${reading.unit}<span class="owner-pill">${ownerLabel}</span></strong>
+                <div>Date : ${reading.reading_date}</div>
+                ${note}
+                <div class="reading-meta">Ajouté le ${new Date(reading.created_at).toLocaleString("fr-FR")}</div>
+              </article>
+            `;
+          })
+          .join("");
+      }
+
+      async function handleLogout() {
+        if (!supabaseClient) {
+          return;
+        }
+        await supabaseClient.auth.signOut();
+        currentSession = null;
+        sharedUserIds = [];
+        profileEmailsById = {};
+        settingsPanel.classList.add("hidden");
+        setAppVisible(false);
+        setMessage(authMessage, "Vous avez été déconnecté.", "success");
+      }
+
+      function bindEvents() {
+        authForm.addEventListener("submit", handleAuthSubmit);
+        signupBtn.addEventListener("click", () => {
+          toggleAuthMode();
+        });
+        settingsBtn.addEventListener("click", toggleSettings);
+        mateForm.addEventListener("submit", handleMateSubmit);
+        logoutBtn.addEventListener("click", handleLogout);
+        readingForm.addEventListener("submit", handleReadingSubmit);
+        document.getElementById("reading-type").addEventListener("change", (event) => {
+          const unitField = document.getElementById("reading-unit");
+          unitField.value = event.target.value === "water" ? "m³" : "kWh";
+        });
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        initDefaultDate();
+        bindEvents();
+        initSupabaseClient();
+      });
+    </script>
+  </body>
+</html>
