@@ -76,27 +76,31 @@
         color: var(--text);
       }
 
+      .label-row {
+        align-items: center;
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+      }
+
+      .unit-preview {
+        color: var(--muted);
+        font-size: 0.9rem;
+        font-weight: 700;
+      }
+
       input,
-      select,
-      textarea,
       button {
         font: inherit;
       }
 
-      input,
-      select,
-      textarea {
+      input {
         width: 100%;
         padding: 10px 12px;
         border: 1px solid var(--border);
         border-radius: 10px;
         background: #fcfdff;
         color: var(--text);
-      }
-
-      textarea {
-        min-height: 88px;
-        resize: vertical;
       }
 
       .actions,
@@ -131,6 +135,15 @@
       button.secondary {
         background: #e2e8f0;
         color: var(--text);
+      }
+
+      button.danger {
+        background: #fee2e2;
+        color: var(--danger);
+      }
+
+      button.danger:hover {
+        background: #fecaca;
       }
 
       button.ghost {
@@ -185,6 +198,36 @@
         padding: 10px 12px;
       }
 
+      .type-options {
+        display: grid;
+        gap: 10px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .type-option {
+        align-items: center;
+        background: #f8fafc;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        color: var(--text);
+        display: flex;
+        font-weight: 700;
+        gap: 10px;
+        justify-content: center;
+        min-height: 56px;
+        padding: 12px;
+      }
+
+      .type-option[aria-pressed="true"] {
+        background: #dbeafe;
+        border-color: var(--accent);
+        color: var(--accent-dark);
+      }
+
+      .type-emoji {
+        font-size: 1.3rem;
+      }
+
       .owner-pill {
         background: #e0f2fe;
         border-radius: 999px;
@@ -215,6 +258,19 @@
         margin-top: 4px;
       }
 
+      .reading-footer {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: space-between;
+        margin-top: 8px;
+      }
+
+      .delete-reading-btn {
+        padding: 7px 12px;
+      }
+
       @media (max-width: 640px) {
         .container {
           padding: 20px 12px 40px;
@@ -235,14 +291,14 @@
 
       <section class="card" id="auth-card">
         <h2>Connexion</h2>
-        <form id="auth-form">
+        <form id="auth-form" autocomplete="on">
           <label>
             E-mail
-            <input id="auth-email" type="email" required />
+            <input id="auth-email" name="email" type="email" autocomplete="email" required />
           </label>
           <label>
             Mot de passe
-            <input id="auth-password" type="password" minlength="6" required />
+            <input id="auth-password" name="password" type="password" autocomplete="current-password" minlength="6" required />
           </label>
           <div class="actions">
             <button type="submit" id="auth-submit-btn" class="primary">Se connecter</button>
@@ -278,26 +334,27 @@
         <form id="reading-form">
           <label>
             Type
-            <select id="reading-type">
-              <option value="water">Eau</option>
-              <option value="electricity">Électricité</option>
-            </select>
+            <div class="type-options" role="group" aria-label="Type de relevé">
+              <button type="button" class="type-option" data-reading-type="water" aria-pressed="true">
+                <span class="type-emoji" aria-hidden="true">💧</span>
+                Eau
+              </button>
+              <button type="button" class="type-option" data-reading-type="electricity" aria-pressed="false">
+                <span class="type-emoji" aria-hidden="true">⚡</span>
+                Électricité
+              </button>
+            </div>
           </label>
           <label>
-            Date du relevé
-            <input id="reading-date" type="date" required />
+            Date et heure du relevé
+            <input id="reading-date" type="datetime-local" required />
           </label>
           <label>
-            Valeur
-            <input id="reading-value" type="number" step="0.01" min="0" required />
-          </label>
-          <label>
-            Unité
-            <input id="reading-unit" type="text" placeholder="m³ ou kWh" required />
-          </label>
-          <label>
-            Note
-            <textarea id="reading-note" placeholder="Optionnel"></textarea>
+            <span class="label-row">
+              Valeur
+              <span id="reading-unit-label" class="unit-preview">m³</span>
+            </span>
+            <input id="reading-value" type="text" inputmode="decimal" pattern="[0-9]+([,.][0-9]+)?" required />
           </label>
           <div class="actions">
             <button type="submit" class="primary">Enregistrer</button>
@@ -315,10 +372,12 @@
     <script>
       const DEFAULT_SUPABASE_URL = "https://jjafxjyrnysujgwwtkte.supabase.co";
       const DEFAULT_SUPABASE_KEY = "sb_publishable_KZqc80abiojlxzIe5cnJew_-L2IPfvX";
+      const LAST_EMAIL_KEY = "consomate-last-email";
 
       let supabaseClient = null;
       let currentSession = null;
       let authMode = "signin";
+      let selectedReadingType = "water";
       let sharedUserIds = [];
       let profileEmailsById = {};
 
@@ -344,17 +403,40 @@
         element.className = `message ${type}`.trim();
       }
 
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
       function setAppVisible(isLoggedIn) {
         authCard.classList.toggle("hidden", isLoggedIn);
         appCard.classList.toggle("hidden", !isLoggedIn);
       }
 
-      function getTodayString() {
-        return new Date().toISOString().slice(0, 10);
+      function getCurrentDateTimeString() {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, "0");
+        const day = String(now.getDate()).padStart(2, "0");
+        const hours = String(now.getHours()).padStart(2, "0");
+        const minutes = String(now.getMinutes()).padStart(2, "0");
+
+        return `${year}-${month}-${day}T${hours}:${minutes}`;
       }
 
       function initDefaultDate() {
-        document.getElementById("reading-date").value = getTodayString();
+        document.getElementById("reading-date").value = getCurrentDateTimeString();
+      }
+
+      function restoreSavedEmail() {
+        const savedEmail = localStorage.getItem(LAST_EMAIL_KEY);
+        if (savedEmail) {
+          document.getElementById("auth-email").value = savedEmail;
+        }
       }
 
       async function initSupabaseClient() {
@@ -425,6 +507,7 @@
         }
 
         setMessage(authMessage, "Traitement en cours…", "");
+        localStorage.setItem(LAST_EMAIL_KEY, email);
 
         let response;
         if (authMode === "signup") {
@@ -460,10 +543,65 @@
         authMode = authMode === "signin" ? "signup" : "signin";
         signupBtn.textContent = authMode === "signin" ? "Créer un compte" : "Retour à la connexion";
         authSubmitBtn.textContent = authMode === "signin" ? "Se connecter" : "Créer le compte";
+        document.getElementById("auth-password").autocomplete = authMode === "signin" ? "current-password" : "new-password";
       }
 
       function toggleSettings() {
         settingsPanel.classList.toggle("hidden");
+      }
+
+      function getReadingUnit(type) {
+        return type === "water" ? "m³" : "kWh";
+      }
+
+      function selectReadingType(type) {
+        selectedReadingType = type;
+        document.querySelectorAll("[data-reading-type]").forEach((button) => {
+          button.setAttribute("aria-pressed", String(button.dataset.readingType === type));
+        });
+        document.getElementById("reading-unit-label").textContent = getReadingUnit(type);
+      }
+
+      function formatReadingDate(value) {
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) {
+          return value;
+        }
+
+        return date.toLocaleString("fr-FR", {
+          dateStyle: "short",
+          timeStyle: "short"
+        });
+      }
+
+      function parseReadingValue(value) {
+        return Number(value.trim().replace(",", "."));
+      }
+
+      async function deleteReading(readingId) {
+        if (!supabaseClient || !currentSession) {
+          setMessage(readingMessage, "Vous devez être connecté pour supprimer un relevé.", "error");
+          return;
+        }
+
+        const shouldDelete = window.confirm("Supprimer ce relevé ?");
+        if (!shouldDelete) {
+          return;
+        }
+
+        const { error } = await supabaseClient
+          .from("readings")
+          .delete()
+          .eq("id", readingId)
+          .eq("user_id", currentSession.user.id);
+
+        if (error) {
+          setMessage(readingMessage, `Impossible de supprimer le relevé : ${error.message}`, "error");
+          return;
+        }
+
+        setMessage(readingMessage, "Relevé supprimé.", "success");
+        await loadReadings();
       }
 
       async function handleMateSubmit(event) {
@@ -501,10 +639,15 @@
           return;
         }
 
-        const { error } = await supabaseClient.from("mates").upsert({
-          owner_id: currentSession.user.id,
-          mate_id: profile.id
-        });
+        const { error } = await supabaseClient
+          .from("mates")
+          .upsert(
+            {
+              owner_id: currentSession.user.id,
+              mate_id: profile.id
+            },
+            { onConflict: "owner_id,mate_id" }
+          );
 
         if (error) {
           setMessage(mateMessage, `Impossible d’ajouter ce mate : ${error.message}`, "error");
@@ -561,7 +704,7 @@
         });
 
         matesList.innerHTML = mateIds
-          .map((id) => `<div class="mate-item"><span>${profileEmailsById[id] || id}</span></div>`)
+          .map((id) => `<div class="mate-item"><span>${escapeHtml(profileEmailsById[id] || id)}</span></div>`)
           .join("");
       }
 
@@ -572,16 +715,22 @@
           return;
         }
 
+        const readingDate = new Date(document.getElementById("reading-date").value);
+        if (Number.isNaN(readingDate.getTime())) {
+          setMessage(readingMessage, "La date et l’heure du relevé sont obligatoires.", "error");
+          return;
+        }
+
         const payload = {
           user_id: currentSession.user.id,
-          type: document.getElementById("reading-type").value,
-          value: parseFloat(document.getElementById("reading-value").value),
-          unit: document.getElementById("reading-unit").value.trim(),
-          reading_date: document.getElementById("reading-date").value,
-          note: document.getElementById("reading-note").value.trim() || null
+          type: selectedReadingType,
+          value: parseReadingValue(document.getElementById("reading-value").value),
+          unit: getReadingUnit(selectedReadingType),
+          reading_date: readingDate.toISOString(),
+          note: null
         };
 
-        if (!payload.value || Number.isNaN(payload.value)) {
+        if (Number.isNaN(payload.value) || payload.value < 0) {
           setMessage(readingMessage, "La valeur du relevé est obligatoire.", "error");
           return;
         }
@@ -594,7 +743,7 @@
 
         readingForm.reset();
         initDefaultDate();
-        document.getElementById("reading-unit").value = payload.type === "water" ? "m³" : "kWh";
+        selectReadingType(payload.type);
         setMessage(readingMessage, "Relevé enregistré dans la base Supabase.", "success");
         loadReadings();
       }
@@ -626,14 +775,20 @@
         readingsList.innerHTML = data
           .map((reading) => {
             const typeLabel = reading.type === "water" ? "Eau" : "Électricité";
-            const note = reading.note ? `<div>${reading.note}</div>` : "";
             const ownerLabel = reading.user_id === currentSession.user.id ? "Moi" : profileEmailsById[reading.user_id] || "Mate";
+            const deleteButton =
+              reading.user_id === currentSession.user.id
+                ? `<button type="button" class="danger delete-reading-btn" data-delete-reading-id="${escapeHtml(reading.id)}">Supprimer</button>`
+                : "";
+
             return `
               <article class="reading-item">
-                <strong>${typeLabel} — ${reading.value} ${reading.unit}<span class="owner-pill">${ownerLabel}</span></strong>
-                <div>Date : ${reading.reading_date}</div>
-                ${note}
-                <div class="reading-meta">Ajouté le ${new Date(reading.created_at).toLocaleString("fr-FR")}</div>
+                <strong>${typeLabel} — ${escapeHtml(reading.value)} ${escapeHtml(reading.unit)}<span class="owner-pill">${escapeHtml(ownerLabel)}</span></strong>
+                <div>Date : ${escapeHtml(formatReadingDate(reading.reading_date))}</div>
+                <div class="reading-footer">
+                  <div class="reading-meta">Ajouté le ${new Date(reading.created_at).toLocaleString("fr-FR")}</div>
+                  ${deleteButton}
+                </div>
               </article>
             `;
           })
@@ -662,13 +817,21 @@
         mateForm.addEventListener("submit", handleMateSubmit);
         logoutBtn.addEventListener("click", handleLogout);
         readingForm.addEventListener("submit", handleReadingSubmit);
-        document.getElementById("reading-type").addEventListener("change", (event) => {
-          const unitField = document.getElementById("reading-unit");
-          unitField.value = event.target.value === "water" ? "m³" : "kWh";
+        readingsList.addEventListener("click", (event) => {
+          const deleteButton = event.target.closest("[data-delete-reading-id]");
+          if (deleteButton) {
+            deleteReading(deleteButton.dataset.deleteReadingId);
+          }
+        });
+        document.querySelectorAll("[data-reading-type]").forEach((button) => {
+          button.addEventListener("click", () => {
+            selectReadingType(button.dataset.readingType);
+          });
         });
       }
 
       document.addEventListener("DOMContentLoaded", () => {
+        restoreSavedEmail();
         initDefaultDate();
         bindEvents();
         initSupabaseClient();
