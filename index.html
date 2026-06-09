@@ -35,12 +35,22 @@
       }
 
       .hero {
+        align-items: center;
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
         margin-bottom: 24px;
+        position: relative;
       }
 
       .hero h1 {
-        margin: 0 0 8px;
+        margin: 0;
         font-size: 2rem;
+      }
+
+      .site-title {
+        color: inherit;
+        text-decoration: none;
       }
 
       .hero p {
@@ -76,19 +86,6 @@
         color: var(--text);
       }
 
-      .label-row {
-        align-items: center;
-        display: flex;
-        justify-content: space-between;
-        gap: 10px;
-      }
-
-      .unit-preview {
-        color: var(--muted);
-        font-size: 0.9rem;
-        font-weight: 700;
-      }
-
       input,
       button {
         font: inherit;
@@ -109,6 +106,88 @@
         flex-wrap: wrap;
         gap: 10px;
         align-items: center;
+      }
+
+      .user-menu {
+        margin-left: auto;
+        position: relative;
+      }
+
+      .top-actions {
+        align-items: center;
+        display: flex;
+        gap: 10px;
+        margin-left: auto;
+      }
+
+      .add-reading-btn {
+        align-items: center;
+        background: var(--accent);
+        color: white;
+        display: flex;
+        font-size: 1.5rem;
+        font-weight: 700;
+        height: 44px;
+        justify-content: center;
+        line-height: 1;
+        padding: 0;
+        width: 44px;
+      }
+
+      .add-reading-btn:hover {
+        background: var(--accent-dark);
+      }
+
+      .user-menu-btn {
+        align-items: center;
+        background: var(--card);
+        border: 1px solid var(--border);
+        color: var(--text);
+        display: flex;
+        height: 44px;
+        justify-content: center;
+        padding: 0;
+        width: 44px;
+      }
+
+      .user-menu-btn svg {
+        height: 21px;
+        width: 21px;
+      }
+
+      .user-menu-popover {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: 0 14px 40px rgba(15, 23, 42, 0.12);
+        display: grid;
+        gap: 6px;
+        min-width: 180px;
+        padding: 8px;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        z-index: 10;
+      }
+
+      .user-menu-popover.hidden {
+        display: none;
+      }
+
+      .user-menu-popover button {
+        background: transparent;
+        border-radius: 8px;
+        color: var(--text);
+        padding: 10px 12px;
+        text-align: left;
+      }
+
+      .user-menu-popover button:hover {
+        background: #f1f5f9;
+      }
+
+      .user-menu-popover button.danger-action {
+        color: var(--danger);
       }
 
       button {
@@ -168,34 +247,7 @@
       }
 
       .hidden {
-        display: none;
-      }
-
-      .settings-panel {
-        border-top: 1px solid var(--border);
-        margin-top: 18px;
-        padding-top: 18px;
-      }
-
-      .settings-panel h3 {
-        margin: 0 0 12px;
-        font-size: 1rem;
-      }
-
-      .mate-list {
-        display: grid;
-        gap: 8px;
-        margin-top: 12px;
-      }
-
-      .mate-item {
-        align-items: center;
-        background: #f8fafc;
-        border: 1px solid var(--border);
-        border-radius: 12px;
-        display: flex;
-        justify-content: space-between;
-        padding: 10px 12px;
+        display: none !important;
       }
 
       .type-options {
@@ -206,8 +258,7 @@
 
       .type-option {
         align-items: center;
-        background: #f8fafc;
-        border: 1px solid var(--border);
+        border: none;
         border-radius: 12px;
         color: var(--text);
         display: flex;
@@ -218,14 +269,68 @@
         padding: 12px;
       }
 
-      .type-option[aria-pressed="true"] {
+      .type-option[data-reading-type="water"] {
         background: #dbeafe;
-        border-color: var(--accent);
-        color: var(--accent-dark);
+        color: #1e40af;
+      }
+
+      .type-option[data-reading-type="electricity"] {
+        background: #fef3c7;
+        color: #92400e;
+      }
+
+      .type-option[aria-pressed="true"] {
+        box-shadow: inset 0 0 0 2px currentColor;
+        transform: translateY(-1px);
       }
 
       .type-emoji {
         font-size: 1.3rem;
+      }
+
+      .meter-input {
+        display: grid;
+        gap: 8px;
+      }
+
+      .meter-digits {
+        display: grid;
+        gap: 6px;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+      }
+
+      .meter-digit {
+        border: none;
+        border-radius: 8px;
+        font-size: 1.25rem;
+        font-weight: 800;
+        height: 48px;
+        padding: 0;
+        text-align: center;
+      }
+
+      .meter-digit.black {
+        background: #111827;
+        color: #ffffff;
+      }
+
+      .meter-digit.red {
+        background: #fee2e2;
+        color: #b91c1c;
+      }
+
+      .meter-caption {
+        color: var(--muted);
+        display: grid;
+        font-size: 0.85rem;
+        font-weight: 700;
+        gap: 6px;
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+        text-align: center;
+      }
+
+      .meter-unit {
+        grid-column: 4;
       }
 
       .owner-pill {
@@ -240,35 +345,112 @@
       }
 
       .reading-item {
+        align-items: center;
         border: 1px solid var(--border);
-        border-radius: 12px;
-        padding: 12px 14px;
-        margin-top: 10px;
         background: #fcfdff;
+        border-radius: 10px;
+        display: flex;
+        gap: 12px;
+        justify-content: space-between;
+        margin-top: 8px;
+        padding: 8px 10px;
       }
 
       .reading-item strong {
         display: block;
-        margin-bottom: 4px;
+        font-size: 0.98rem;
+        margin-bottom: 2px;
       }
 
-      .reading-meta {
+      .reading-date {
         color: var(--muted);
-        font-size: 0.92rem;
-        margin-top: 4px;
+        font-size: 0.9rem;
       }
 
       .reading-footer {
         align-items: center;
         display: flex;
+        flex: 0 0 auto;
         flex-wrap: wrap;
         gap: 10px;
-        justify-content: space-between;
-        margin-top: 8px;
+        justify-content: flex-end;
       }
 
       .delete-reading-btn {
-        padding: 7px 12px;
+        padding: 6px 10px;
+      }
+
+      .graph-toolbar {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: space-between;
+        margin-bottom: 12px;
+      }
+
+      .month-controls {
+        align-items: center;
+        display: flex;
+        gap: 8px;
+      }
+
+      .month-controls button {
+        align-items: center;
+        background: #e2e8f0;
+        color: var(--text);
+        display: flex;
+        height: 36px;
+        justify-content: center;
+        padding: 0;
+        width: 36px;
+      }
+
+      .month-label {
+        color: var(--text);
+        font-weight: 700;
+        min-width: 130px;
+        text-align: center;
+      }
+
+      .graph-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .legend-item {
+        align-items: center;
+        color: var(--muted);
+        display: flex;
+        font-size: 0.9rem;
+        gap: 6px;
+      }
+
+      .legend-dot {
+        border-radius: 12px;
+        display: inline-block;
+        height: 10px;
+        width: 10px;
+      }
+
+      .legend-dot.water {
+        background: #2563eb;
+      }
+
+      .legend-dot.electricity {
+        background: #f59e0b;
+      }
+
+      .graph-frame {
+        min-height: 260px;
+        overflow: hidden;
+      }
+
+      .graph-frame svg {
+        display: block;
+        height: auto;
+        width: 100%;
       }
 
       @media (max-width: 640px) {
@@ -279,14 +461,32 @@
         .card {
           padding: 18px;
         }
+
+        .reading-item {
+          align-items: flex-start;
+        }
       }
     </style>
   </head>
   <body>
     <main class="container">
       <header class="hero">
-        <h1>ConsoMate</h1>
-        <p>Connectez-vous, ajoutez vos relevés d’eau et d’électricité, et gardez une trace simple de vos consommations.</p>
+        <h1><a class="site-title" href="index.html">ConsoMate</a></h1>
+        <div id="top-actions" class="top-actions hidden">
+          <button type="button" id="add-reading-btn" class="add-reading-btn" aria-label="Ajouter un relevé">+</button>
+          <div id="user-menu" class="user-menu">
+            <button type="button" id="user-menu-btn" class="user-menu-btn" aria-label="Menu utilisateur" aria-expanded="false">
+              <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21a8 8 0 0 0-16 0" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+            </button>
+            <div id="user-menu-popover" class="user-menu-popover hidden">
+              <button type="button" id="settings-btn">Réglages</button>
+              <button type="button" id="logout-btn" class="danger-action">Se déconnecter</button>
+            </div>
+          </div>
+        </div>
       </header>
 
       <section class="card" id="auth-card">
@@ -311,24 +511,6 @@
       <section class="card hidden" id="app-card">
         <div class="toolbar">
           <h2 style="margin: 0; flex: 1">Ajouter un relevé</h2>
-          <button type="button" id="settings-btn" class="secondary">Réglages</button>
-          <button type="button" id="logout-btn" class="secondary">Se déconnecter</button>
-        </div>
-
-        <div id="settings-panel" class="settings-panel hidden">
-          <h3>Mates</h3>
-          <form id="mate-form">
-            <label>
-              E-mail du mate
-              <input id="mate-email" type="email" placeholder="mate@example.com" required />
-            </label>
-            <div class="actions">
-              <button type="submit" class="primary">Ajouter</button>
-            </div>
-          </form>
-          <p class="hint">Les relevés sont partagés avec les mates ajoutés ici.</p>
-          <p id="mate-message" class="message"></p>
-          <div id="mates-list" class="mate-list empty-state">Aucun mate ajouté pour le moment.</div>
         </div>
 
         <form id="reading-form">
@@ -350,20 +532,49 @@
             <input id="reading-date" type="datetime-local" required />
           </label>
           <label>
-            <span class="label-row">
-              Valeur
-              <span id="reading-unit-label" class="unit-preview">m³</span>
-            </span>
-            <input id="reading-value" type="text" inputmode="decimal" pattern="[0-9]+([,.][0-9]+)?" required />
+            Valeur
+            <div id="water-meter-input" class="meter-input">
+              <div class="meter-digits" aria-label="Valeur du compteur d'eau">
+                <input class="meter-digit black" type="text" inputmode="numeric" maxlength="1" data-meter-digit="whole" aria-label="Milliers de mètre cube" />
+                <input class="meter-digit black" type="text" inputmode="numeric" maxlength="1" data-meter-digit="whole" aria-label="Centaines de mètre cube" />
+                <input class="meter-digit black" type="text" inputmode="numeric" maxlength="1" data-meter-digit="whole" aria-label="Dizaines de mètre cube" />
+                <input class="meter-digit black" type="text" inputmode="numeric" maxlength="1" data-meter-digit="whole" aria-label="Unités de mètre cube" />
+                <input class="meter-digit red" type="text" inputmode="numeric" maxlength="1" data-meter-digit="decimal" aria-label="Première décimale" />
+                <input class="meter-digit red" type="text" inputmode="numeric" maxlength="1" data-meter-digit="decimal" aria-label="Deuxième décimale" />
+                <input class="meter-digit red" type="text" inputmode="numeric" maxlength="1" data-meter-digit="decimal" aria-label="Troisième décimale" />
+              </div>
+              <div class="meter-caption">
+                <span class="meter-unit">m³</span>
+              </div>
+            </div>
+            <input id="reading-value" class="hidden" type="text" inputmode="decimal" placeholder="Valeur en kWh" />
           </label>
           <div class="actions">
             <button type="submit" class="primary">Enregistrer</button>
           </div>
         </form>
+      </section>
 
+      <section class="card hidden" id="graph-card">
+        <div class="graph-toolbar">
+          <h2 style="margin: 0">Graphe</h2>
+          <div class="month-controls">
+            <button type="button" id="prev-month-btn" aria-label="Mois précédent">‹</button>
+            <span id="graph-month-label" class="month-label"></span>
+            <button type="button" id="next-month-btn" aria-label="Mois suivant">›</button>
+          </div>
+        </div>
+        <div class="graph-legend">
+          <span class="legend-item"><span class="legend-dot water"></span>Eau, axe gauche</span>
+          <span class="legend-item"><span class="legend-dot electricity"></span>Électricité, axe droit</span>
+        </div>
+        <div id="graph-frame" class="graph-frame"></div>
+      </section>
+
+      <section class="card hidden" id="readings-card">
         <p id="reading-message" class="message"></p>
 
-        <h3 style="margin: 20px 0 8px">Derniers relevés partagés</h3>
+        <h2>Derniers relevés partagés</h2>
         <div id="readings-list" class="empty-state">Chargement…</div>
       </section>
     </main>
@@ -378,6 +589,8 @@
       let currentSession = null;
       let authMode = "signin";
       let selectedReadingType = "water";
+      let selectedGraphMonth = new Date();
+      let graphReadings = [];
       let sharedUserIds = [];
       let profileEmailsById = {};
 
@@ -385,18 +598,27 @@
       const authMessage = document.getElementById("auth-message");
       const authSubmitBtn = document.getElementById("auth-submit-btn");
       const signupBtn = document.getElementById("signup-btn");
+      const topActions = document.getElementById("top-actions");
+      const addReadingBtn = document.getElementById("add-reading-btn");
+      const userMenu = document.getElementById("user-menu");
+      const userMenuBtn = document.getElementById("user-menu-btn");
+      const userMenuPopover = document.getElementById("user-menu-popover");
       const settingsBtn = document.getElementById("settings-btn");
-      const settingsPanel = document.getElementById("settings-panel");
-      const mateForm = document.getElementById("mate-form");
-      const mateEmail = document.getElementById("mate-email");
-      const mateMessage = document.getElementById("mate-message");
-      const matesList = document.getElementById("mates-list");
       const logoutBtn = document.getElementById("logout-btn");
       const readingForm = document.getElementById("reading-form");
+      const readingValueInput = document.getElementById("reading-value");
+      const waterMeterInput = document.getElementById("water-meter-input");
+      const meterDigitInputs = [...document.querySelectorAll("[data-meter-digit]")];
       const readingMessage = document.getElementById("reading-message");
       const readingsList = document.getElementById("readings-list");
+      const graphFrame = document.getElementById("graph-frame");
+      const graphMonthLabel = document.getElementById("graph-month-label");
+      const prevMonthBtn = document.getElementById("prev-month-btn");
+      const nextMonthBtn = document.getElementById("next-month-btn");
       const authCard = document.getElementById("auth-card");
       const appCard = document.getElementById("app-card");
+      const graphCard = document.getElementById("graph-card");
+      const readingsCard = document.getElementById("readings-card");
 
       function setMessage(element, text, type = "") {
         element.textContent = text;
@@ -414,7 +636,33 @@
 
       function setAppVisible(isLoggedIn) {
         authCard.classList.toggle("hidden", isLoggedIn);
-        appCard.classList.toggle("hidden", !isLoggedIn);
+        topActions.classList.toggle("hidden", !isLoggedIn);
+        graphCard.classList.toggle("hidden", !isLoggedIn);
+        readingsCard.classList.toggle("hidden", !isLoggedIn);
+        if (!isLoggedIn) {
+          appCard.classList.add("hidden");
+        }
+        if (!isLoggedIn) {
+          closeUserMenu();
+        }
+      }
+
+      function closeUserMenu() {
+        userMenuPopover.classList.add("hidden");
+        userMenuBtn.setAttribute("aria-expanded", "false");
+      }
+
+      function toggleUserMenu() {
+        const isOpen = !userMenuPopover.classList.contains("hidden");
+        userMenuPopover.classList.toggle("hidden", isOpen);
+        userMenuBtn.setAttribute("aria-expanded", String(!isOpen));
+      }
+
+      function toggleReadingForm() {
+        appCard.classList.toggle("hidden");
+        if (!appCard.classList.contains("hidden")) {
+          focusCurrentValueInput();
+        }
       }
 
       function getCurrentDateTimeString() {
@@ -547,7 +795,7 @@
       }
 
       function toggleSettings() {
-        settingsPanel.classList.toggle("hidden");
+        window.location.href = "settings.html";
       }
 
       function getReadingUnit(type) {
@@ -559,7 +807,9 @@
         document.querySelectorAll("[data-reading-type]").forEach((button) => {
           button.setAttribute("aria-pressed", String(button.dataset.readingType === type));
         });
-        document.getElementById("reading-unit-label").textContent = getReadingUnit(type);
+        waterMeterInput.classList.toggle("hidden", type !== "water");
+        readingValueInput.classList.toggle("hidden", type === "water");
+        readingValueInput.required = type !== "water";
       }
 
       function formatReadingDate(value) {
@@ -574,8 +824,202 @@
         });
       }
 
+      function formatMonthLabel(date) {
+        return date.toLocaleDateString("fr-FR", {
+          month: "long",
+          year: "numeric"
+        });
+      }
+
+      function getMonthBounds(date) {
+        const start = new Date(date.getFullYear(), date.getMonth(), 1);
+        const end = new Date(date.getFullYear(), date.getMonth() + 1, 1);
+        return { start, end };
+      }
+
+      function changeGraphMonth(offset) {
+        selectedGraphMonth = new Date(selectedGraphMonth.getFullYear(), selectedGraphMonth.getMonth() + offset, 1);
+        renderGraph(graphReadings);
+      }
+
       function parseReadingValue(value) {
         return Number(value.trim().replace(",", "."));
+      }
+
+      function getWaterMeterValue() {
+        const hasAnyDigit = meterDigitInputs.some((input) => input.value);
+        if (!hasAnyDigit) {
+          return Number.NaN;
+        }
+
+        const whole = meterDigitInputs
+          .filter((input) => input.dataset.meterDigit === "whole")
+          .map((input) => input.value || "0")
+          .join("");
+        const decimals = meterDigitInputs
+          .filter((input) => input.dataset.meterDigit === "decimal")
+          .map((input) => input.value || "0")
+          .join("");
+
+        return Number(`${whole}.${decimals}`);
+      }
+
+      function getReadingValue() {
+        if (selectedReadingType === "water") {
+          return getWaterMeterValue();
+        }
+
+        return parseReadingValue(readingValueInput.value);
+      }
+
+      function resetWaterMeter() {
+        meterDigitInputs.forEach((input) => {
+          input.value = "";
+        });
+      }
+
+      function focusCurrentValueInput() {
+        if (selectedReadingType === "water") {
+          meterDigitInputs[0].focus();
+          return;
+        }
+
+        readingValueInput.focus();
+      }
+
+      function handleMeterDigitInput(event) {
+        const input = event.target;
+        input.value = input.value.replace(/\D/g, "").slice(-1);
+
+        if (input.value) {
+          const nextInput = meterDigitInputs[meterDigitInputs.indexOf(input) + 1];
+          if (nextInput) {
+            nextInput.focus();
+          }
+        }
+      }
+
+      function handleMeterDigitKeydown(event) {
+        if (event.key !== "Backspace" || event.target.value) {
+          return;
+        }
+
+        const previousInput = meterDigitInputs[meterDigitInputs.indexOf(event.target) - 1];
+        if (previousInput) {
+          previousInput.focus();
+        }
+      }
+
+      function buildConsumptionSeries(readings, type, monthStart, monthEnd) {
+        const daysInMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).getDate();
+        const dailyTotals = Array.from({ length: daysInMonth }, () => 0);
+        const groupedReadings = new Map();
+
+        readings
+          .filter((reading) => reading.type === type)
+          .forEach((reading) => {
+            const ownerReadings = groupedReadings.get(reading.user_id) || [];
+            ownerReadings.push(reading);
+            groupedReadings.set(reading.user_id, ownerReadings);
+          });
+
+        groupedReadings.forEach((ownerReadings) => {
+          ownerReadings
+            .sort((a, b) => new Date(a.reading_date) - new Date(b.reading_date))
+            .forEach((reading, index, sortedReadings) => {
+              const readingDate = new Date(reading.reading_date);
+              if (readingDate < monthStart || readingDate >= monthEnd || index === 0) {
+                return;
+              }
+
+              const previousValue = Number(sortedReadings[index - 1].value);
+              const currentValue = Number(reading.value);
+              const consumption = currentValue - previousValue;
+              if (Number.isNaN(consumption) || consumption < 0) {
+                return;
+              }
+
+              dailyTotals[readingDate.getDate() - 1] += consumption;
+            });
+        });
+
+        let cumulative = 0;
+        return dailyTotals.map((total, index) => {
+          cumulative += total;
+          return {
+            day: index + 1,
+            value: cumulative
+          };
+        });
+      }
+
+      function createPolyline(points, maxValue, chart) {
+        if (points.length === 0 || maxValue <= 0) {
+          return "";
+        }
+
+        const xStep = chart.width / Math.max(points.length - 1, 1);
+        return points
+          .map((point, index) => {
+            const x = chart.left + index * xStep;
+            const y = chart.top + chart.height - (point.value / maxValue) * chart.height;
+            return `${x.toFixed(1)},${y.toFixed(1)}`;
+          })
+          .join(" ");
+      }
+
+      function renderGraph(readings = []) {
+        graphReadings = readings;
+        const { start, end } = getMonthBounds(selectedGraphMonth);
+        graphMonthLabel.textContent = formatMonthLabel(start);
+
+        const waterSeries = buildConsumptionSeries(readings, "water", start, end);
+        const electricitySeries = buildConsumptionSeries(readings, "electricity", start, end);
+        const waterMax = Math.max(...waterSeries.map((point) => point.value), 0);
+        const electricityMax = Math.max(...electricitySeries.map((point) => point.value), 0);
+
+        if (waterMax === 0 && electricityMax === 0) {
+          graphFrame.innerHTML = '<p class="empty-state">Aucune consommation calculable pour ce mois.</p>';
+          return;
+        }
+
+        const chart = {
+          left: 54,
+          top: 18,
+          width: 520,
+          height: 180
+        };
+        const waterPoints = createPolyline(waterSeries, waterMax, chart);
+        const electricityPoints = createPolyline(electricitySeries, electricityMax, chart);
+        const monthEndDay = new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
+        const xStart = chart.left;
+        const xMiddle = chart.left + chart.width / 2;
+        const xEnd = chart.left + chart.width;
+
+        graphFrame.innerHTML = `
+          <svg viewBox="0 0 650 245" role="img" aria-label="Consommation mensuelle">
+            <line x1="${chart.left}" y1="${chart.top}" x2="${chart.left}" y2="${chart.top + chart.height}" stroke="#cbd5e1" />
+            <line x1="${chart.left + chart.width}" y1="${chart.top}" x2="${chart.left + chart.width}" y2="${chart.top + chart.height}" stroke="#cbd5e1" />
+            <line x1="${chart.left}" y1="${chart.top + chart.height}" x2="${chart.left + chart.width}" y2="${chart.top + chart.height}" stroke="#cbd5e1" />
+            <text x="8" y="${chart.top + 12}" fill="#2563eb" font-size="12">${waterMax.toFixed(1)} m3</text>
+            <text x="8" y="${chart.top + chart.height}" fill="#2563eb" font-size="12">0 m3</text>
+            <text x="586" y="${chart.top + 12}" fill="#b45309" font-size="12">${electricityMax.toFixed(1)} kWh</text>
+            <text x="586" y="${chart.top + chart.height}" fill="#b45309" font-size="12">0 kWh</text>
+            <text x="${xStart}" y="226" fill="#64748b" font-size="12">1</text>
+            <text x="${xMiddle - 8}" y="226" fill="#64748b" font-size="12">${Math.ceil(monthEndDay / 2)}</text>
+            <text x="${xEnd - 12}" y="226" fill="#64748b" font-size="12">${monthEndDay}</text>
+            ${
+              waterPoints
+                ? `<polyline points="${waterPoints}" fill="none" stroke="#2563eb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />`
+                : ""
+            }
+            ${
+              electricityPoints
+                ? `<polyline points="${electricityPoints}" fill="none" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />`
+                : ""
+            }
+          </svg>
+        `;
       }
 
       async function deleteReading(readingId) {
@@ -604,64 +1048,8 @@
         await loadReadings();
       }
 
-      async function handleMateSubmit(event) {
-        event.preventDefault();
-        if (!supabaseClient || !currentSession) {
-          setMessage(mateMessage, "Connectez-vous pour ajouter un mate.", "error");
-          return;
-        }
-
-        const email = mateEmail.value.trim().toLowerCase();
-        if (!email) {
-          setMessage(mateMessage, "Saisissez l’e-mail du mate.", "error");
-          return;
-        }
-
-        if (email === currentSession.user.email.toLowerCase()) {
-          setMessage(mateMessage, "Vous êtes déjà votre propre mate.", "error");
-          return;
-        }
-
-        setMessage(mateMessage, "Recherche du mate…", "");
-        const { data: profile, error: profileError } = await supabaseClient
-          .from("profiles")
-          .select("id,email")
-          .eq("email", email)
-          .maybeSingle();
-
-        if (profileError) {
-          setMessage(mateMessage, `Impossible de rechercher ce mate : ${profileError.message}`, "error");
-          return;
-        }
-
-        if (!profile) {
-          setMessage(mateMessage, "Aucun compte trouvé avec cet e-mail.", "error");
-          return;
-        }
-
-        const { error } = await supabaseClient
-          .from("mates")
-          .upsert(
-            {
-              owner_id: currentSession.user.id,
-              mate_id: profile.id
-            },
-            { onConflict: "owner_id,mate_id" }
-          );
-
-        if (error) {
-          setMessage(mateMessage, `Impossible d’ajouter ce mate : ${error.message}`, "error");
-          return;
-        }
-
-        mateForm.reset();
-        setMessage(mateMessage, "Mate ajouté. Les relevés sont maintenant partagés.", "success");
-        await refreshSharedData();
-      }
-
       async function loadMates() {
         if (!supabaseClient || !currentSession) {
-          matesList.innerHTML = '<p class="empty-state">Connectez-vous pour voir vos mates.</p>';
           return;
         }
 
@@ -677,7 +1065,6 @@
           .or(`owner_id.eq.${userId},mate_id.eq.${userId}`);
 
         if (error) {
-          matesList.innerHTML = `<p class="empty-state">Erreur : ${error.message}</p>`;
           return;
         }
 
@@ -685,7 +1072,6 @@
         sharedUserIds = [userId, ...mateIds];
 
         if (mateIds.length === 0) {
-          matesList.innerHTML = '<p class="empty-state">Aucun mate ajouté pour le moment.</p>';
           return;
         }
 
@@ -695,17 +1081,12 @@
           .in("id", mateIds);
 
         if (profilesError) {
-          matesList.innerHTML = `<p class="empty-state">Erreur : ${profilesError.message}</p>`;
           return;
         }
 
         (profiles || []).forEach((profile) => {
           profileEmailsById[profile.id] = profile.email;
         });
-
-        matesList.innerHTML = mateIds
-          .map((id) => `<div class="mate-item"><span>${escapeHtml(profileEmailsById[id] || id)}</span></div>`)
-          .join("");
       }
 
       async function handleReadingSubmit(event) {
@@ -724,7 +1105,7 @@
         const payload = {
           user_id: currentSession.user.id,
           type: selectedReadingType,
-          value: parseReadingValue(document.getElementById("reading-value").value),
+          value: getReadingValue(),
           unit: getReadingUnit(selectedReadingType),
           reading_date: readingDate.toISOString(),
           note: null
@@ -742,8 +1123,10 @@
         }
 
         readingForm.reset();
+        resetWaterMeter();
         initDefaultDate();
         selectReadingType(payload.type);
+        appCard.classList.add("hidden");
         setMessage(readingMessage, "Relevé enregistré dans la base Supabase.", "success");
         loadReadings();
       }
@@ -760,19 +1143,23 @@
           .select("*")
           .in("user_id", sharedUserIds)
           .order("reading_date", { ascending: false })
-          .limit(10);
+          .limit(500);
 
         if (error) {
           readingsList.innerHTML = `<p class="empty-state">Erreur : ${error.message}</p>`;
+          renderGraph([]);
           return;
         }
 
         if (!data || data.length === 0) {
           readingsList.innerHTML = '<p class="empty-state">Aucun relevé enregistré pour le moment.</p>';
+          renderGraph([]);
           return;
         }
 
+        renderGraph(data);
         readingsList.innerHTML = data
+          .slice(0, 10)
           .map((reading) => {
             const typeLabel = reading.type === "water" ? "Eau" : "Électricité";
             const ownerLabel = reading.user_id === currentSession.user.id ? "Moi" : profileEmailsById[reading.user_id] || "Mate";
@@ -783,10 +1170,11 @@
 
             return `
               <article class="reading-item">
-                <strong>${typeLabel} — ${escapeHtml(reading.value)} ${escapeHtml(reading.unit)}<span class="owner-pill">${escapeHtml(ownerLabel)}</span></strong>
-                <div>Date : ${escapeHtml(formatReadingDate(reading.reading_date))}</div>
+                <div>
+                  <strong>${typeLabel} — ${escapeHtml(reading.value)} ${escapeHtml(reading.unit)}<span class="owner-pill">${escapeHtml(ownerLabel)}</span></strong>
+                  <div class="reading-date">${escapeHtml(formatReadingDate(reading.reading_date))}</div>
+                </div>
                 <div class="reading-footer">
-                  <div class="reading-meta">Ajouté le ${new Date(reading.created_at).toLocaleString("fr-FR")}</div>
                   ${deleteButton}
                 </div>
               </article>
@@ -803,7 +1191,7 @@
         currentSession = null;
         sharedUserIds = [];
         profileEmailsById = {};
-        settingsPanel.classList.add("hidden");
+        closeUserMenu();
         setAppVisible(false);
         setMessage(authMessage, "Vous avez été déconnecté.", "success");
       }
@@ -813,9 +1201,24 @@
         signupBtn.addEventListener("click", () => {
           toggleAuthMode();
         });
+        userMenuBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          toggleUserMenu();
+        });
+        addReadingBtn.addEventListener("click", toggleReadingForm);
+        document.addEventListener("click", (event) => {
+          if (!userMenu.contains(event.target)) {
+            closeUserMenu();
+          }
+        });
         settingsBtn.addEventListener("click", toggleSettings);
-        mateForm.addEventListener("submit", handleMateSubmit);
         logoutBtn.addEventListener("click", handleLogout);
+        prevMonthBtn.addEventListener("click", () => {
+          changeGraphMonth(-1);
+        });
+        nextMonthBtn.addEventListener("click", () => {
+          changeGraphMonth(1);
+        });
         readingForm.addEventListener("submit", handleReadingSubmit);
         readingsList.addEventListener("click", (event) => {
           const deleteButton = event.target.closest("[data-delete-reading-id]");
@@ -828,11 +1231,16 @@
             selectReadingType(button.dataset.readingType);
           });
         });
+        meterDigitInputs.forEach((input) => {
+          input.addEventListener("input", handleMeterDigitInput);
+          input.addEventListener("keydown", handleMeterDigitKeydown);
+        });
       }
 
       document.addEventListener("DOMContentLoaded", () => {
         restoreSavedEmail();
         initDefaultDate();
+        selectReadingType(selectedReadingType);
         bindEvents();
         initSupabaseClient();
       });

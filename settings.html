@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ConsoMate</title>
+    <style>
+      :root {
+        --bg: #f5f7fb;
+        --card: #ffffff;
+        --text: #172033;
+        --muted: #64748b;
+        --accent: #2563eb;
+        --accent-dark: #1d4ed8;
+        --danger: #dc2626;
+        --success: #15803d;
+        --border: #e2e8f0;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        background: linear-gradient(135deg, #eff6ff 0%, var(--bg) 100%);
+        color: var(--text);
+      }
+
+      .container {
+        max-width: 860px;
+        margin: 0 auto;
+        padding: 32px 16px 60px;
+      }
+
+      .hero {
+        align-items: center;
+        display: flex;
+        gap: 16px;
+        justify-content: space-between;
+        margin-bottom: 24px;
+      }
+
+      .hero h1 {
+        margin: 0;
+        font-size: 2rem;
+      }
+
+      .site-title {
+        color: inherit;
+        text-decoration: none;
+      }
+
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 24px;
+        box-shadow: 0 14px 40px rgba(15, 23, 42, 0.06);
+        margin-bottom: 18px;
+      }
+
+      .card h2 {
+        margin-top: 0;
+        margin-bottom: 16px;
+        font-size: 1.1rem;
+      }
+
+      form {
+        display: grid;
+        gap: 12px;
+      }
+
+      label {
+        display: grid;
+        gap: 6px;
+        font-weight: 600;
+      }
+
+      input,
+      button {
+        font: inherit;
+      }
+
+      input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: #fcfdff;
+        color: var(--text);
+      }
+
+      button {
+        border: none;
+        border-radius: 999px;
+        padding: 10px 16px;
+        cursor: pointer;
+        transition: transform 0.15s ease, background 0.15s ease;
+      }
+
+      button:hover {
+        transform: translateY(-1px);
+      }
+
+      button.primary {
+        background: var(--accent);
+        color: white;
+      }
+
+      button.primary:hover {
+        background: var(--accent-dark);
+      }
+
+      button.secondary {
+        background: #e2e8f0;
+        color: var(--text);
+      }
+
+      .actions,
+      .toolbar {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+      }
+
+      .message,
+      .empty-state,
+      .hint {
+        color: var(--muted);
+        font-size: 0.95rem;
+      }
+
+      .message.success {
+        color: var(--success);
+      }
+
+      .message.error {
+        color: var(--danger);
+      }
+
+      .hidden {
+        display: none;
+      }
+
+      .mate-list {
+        display: grid;
+        gap: 8px;
+        margin-top: 12px;
+      }
+
+      .mate-item {
+        background: #f8fafc;
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 10px 12px;
+      }
+
+      .user-menu {
+        margin-left: auto;
+        position: relative;
+      }
+
+      .user-menu-btn {
+        align-items: center;
+        background: var(--card);
+        border: 1px solid var(--border);
+        color: var(--text);
+        display: flex;
+        height: 44px;
+        justify-content: center;
+        padding: 0;
+        width: 44px;
+      }
+
+      .user-menu-btn svg {
+        height: 21px;
+        width: 21px;
+      }
+
+      .user-menu-popover {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        box-shadow: 0 14px 40px rgba(15, 23, 42, 0.12);
+        display: grid;
+        gap: 6px;
+        min-width: 180px;
+        padding: 8px;
+        position: absolute;
+        right: 0;
+        top: calc(100% + 8px);
+        z-index: 10;
+      }
+
+      .user-menu-popover.hidden {
+        display: none;
+      }
+
+      .user-menu-popover button {
+        background: transparent;
+        border-radius: 8px;
+        color: var(--text);
+        padding: 10px 12px;
+        text-align: left;
+      }
+
+      .user-menu-popover button:hover {
+        background: #f1f5f9;
+      }
+
+      .user-menu-popover button.danger-action {
+        color: var(--danger);
+      }
+
+      @media (max-width: 640px) {
+        .container {
+          padding: 20px 12px 40px;
+        }
+
+        .card {
+          padding: 18px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <header class="hero">
+        <h1><a class="site-title" href="index.html">ConsoMate</a></h1>
+        <div id="user-menu" class="user-menu hidden">
+          <button type="button" id="user-menu-btn" class="user-menu-btn" aria-label="Menu utilisateur" aria-expanded="false">
+            <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21a8 8 0 0 0-16 0" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          </button>
+          <div id="user-menu-popover" class="user-menu-popover hidden">
+            <button type="button" id="logout-btn" class="danger-action">Se déconnecter</button>
+          </div>
+        </div>
+      </header>
+
+      <section class="card" id="settings-card">
+        <div class="toolbar">
+          <h2 style="margin: 0; flex: 1">Mates</h2>
+        </div>
+
+        <form id="mate-form">
+          <label>
+            E-mail du mate
+            <input id="mate-email" type="email" placeholder="mate@example.com" required />
+          </label>
+          <div class="actions">
+            <button type="submit" class="primary">Ajouter</button>
+          </div>
+        </form>
+
+        <p class="hint">Les relevés sont partagés avec les mates ajoutés ici.</p>
+        <p id="settings-message" class="message"></p>
+        <div id="mates-list" class="mate-list empty-state">Chargement...</div>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+      const DEFAULT_SUPABASE_URL = "https://jjafxjyrnysujgwwtkte.supabase.co";
+      const DEFAULT_SUPABASE_KEY = "sb_publishable_KZqc80abiojlxzIe5cnJew_-L2IPfvX";
+
+      let supabaseClient = null;
+      let currentSession = null;
+
+      const userMenu = document.getElementById("user-menu");
+      const userMenuBtn = document.getElementById("user-menu-btn");
+      const userMenuPopover = document.getElementById("user-menu-popover");
+      const logoutBtn = document.getElementById("logout-btn");
+      const mateForm = document.getElementById("mate-form");
+      const mateEmail = document.getElementById("mate-email");
+      const settingsMessage = document.getElementById("settings-message");
+      const matesList = document.getElementById("mates-list");
+
+      function setMessage(element, text, type = "") {
+        element.textContent = text;
+        element.className = `message ${type}`.trim();
+      }
+
+      function escapeHtml(value) {
+        return String(value)
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function closeUserMenu() {
+        userMenuPopover.classList.add("hidden");
+        userMenuBtn.setAttribute("aria-expanded", "false");
+      }
+
+      function toggleUserMenu() {
+        const isOpen = !userMenuPopover.classList.contains("hidden");
+        userMenuPopover.classList.toggle("hidden", isOpen);
+        userMenuBtn.setAttribute("aria-expanded", String(!isOpen));
+      }
+
+      function goHome() {
+        window.location.href = "index.html";
+      }
+
+      async function initSupabaseClient() {
+        supabaseClient = window.supabase.createClient(DEFAULT_SUPABASE_URL, DEFAULT_SUPABASE_KEY, {
+          auth: {
+            persistSession: true,
+            autoRefreshToken: true,
+            detectSessionInUrl: true
+          }
+        });
+
+        const { data: sessionData } = await supabaseClient.auth.getSession();
+        currentSession = sessionData.session;
+
+        supabaseClient.auth.onAuthStateChange((_event, session) => {
+          currentSession = session;
+          if (!session) {
+            goHome();
+          }
+        });
+
+        if (!currentSession) {
+          goHome();
+          return;
+        }
+
+        userMenu.classList.remove("hidden");
+        await ensureCurrentProfile();
+        await loadMates();
+      }
+
+      async function ensureCurrentProfile() {
+        await supabaseClient.from("profiles").upsert({
+          id: currentSession.user.id,
+          email: currentSession.user.email.toLowerCase()
+        });
+      }
+
+      async function handleMateSubmit(event) {
+        event.preventDefault();
+        if (!supabaseClient || !currentSession) {
+          setMessage(settingsMessage, "Connectez-vous pour ajouter un mate.", "error");
+          return;
+        }
+
+        const email = mateEmail.value.trim().toLowerCase();
+        if (!email) {
+          setMessage(settingsMessage, "Saisissez l'e-mail du mate.", "error");
+          return;
+        }
+
+        if (email === currentSession.user.email.toLowerCase()) {
+          setMessage(settingsMessage, "Vous êtes déjà votre propre mate.", "error");
+          return;
+        }
+
+        setMessage(settingsMessage, "Recherche du mate...", "");
+        const { data: profile, error: profileError } = await supabaseClient
+          .from("profiles")
+          .select("id,email")
+          .eq("email", email)
+          .maybeSingle();
+
+        if (profileError) {
+          setMessage(settingsMessage, `Impossible de rechercher ce mate : ${profileError.message}`, "error");
+          return;
+        }
+
+        if (!profile) {
+          setMessage(settingsMessage, "Aucun compte trouvé avec cet e-mail.", "error");
+          return;
+        }
+
+        const { error } = await supabaseClient
+          .from("mates")
+          .upsert(
+            {
+              owner_id: currentSession.user.id,
+              mate_id: profile.id
+            },
+            { onConflict: "owner_id,mate_id" }
+          );
+
+        if (error) {
+          setMessage(settingsMessage, `Impossible d'ajouter ce mate : ${error.message}`, "error");
+          return;
+        }
+
+        mateForm.reset();
+        setMessage(settingsMessage, "Mate ajouté. Les relevés sont maintenant partagés.", "success");
+        await loadMates();
+      }
+
+      async function loadMates() {
+        matesList.innerHTML = '<p class="empty-state">Chargement...</p>';
+        const userId = currentSession.user.id;
+        const { data: mateRows, error } = await supabaseClient
+          .from("mates")
+          .select("id,owner_id,mate_id")
+          .or(`owner_id.eq.${userId},mate_id.eq.${userId}`);
+
+        if (error) {
+          matesList.innerHTML = `<p class="empty-state">Erreur : ${escapeHtml(error.message)}</p>`;
+          return;
+        }
+
+        const mateIds = [...new Set((mateRows || []).map((row) => (row.owner_id === userId ? row.mate_id : row.owner_id)))];
+        if (mateIds.length === 0) {
+          matesList.innerHTML = '<p class="empty-state">Aucun mate ajouté pour le moment.</p>';
+          return;
+        }
+
+        const { data: profiles, error: profilesError } = await supabaseClient
+          .from("profiles")
+          .select("id,email")
+          .in("id", mateIds);
+
+        if (profilesError) {
+          matesList.innerHTML = `<p class="empty-state">Erreur : ${escapeHtml(profilesError.message)}</p>`;
+          return;
+        }
+
+        const emailsById = {};
+        (profiles || []).forEach((profile) => {
+          emailsById[profile.id] = profile.email;
+        });
+
+        matesList.innerHTML = mateIds
+          .map((id) => `<div class="mate-item">${escapeHtml(emailsById[id] || id)}</div>`)
+          .join("");
+      }
+
+      async function handleLogout() {
+        if (!supabaseClient) {
+          return;
+        }
+        await supabaseClient.auth.signOut();
+        goHome();
+      }
+
+      function bindEvents() {
+        userMenuBtn.addEventListener("click", (event) => {
+          event.stopPropagation();
+          toggleUserMenu();
+        });
+        document.addEventListener("click", (event) => {
+          if (!userMenu.contains(event.target)) {
+            closeUserMenu();
+          }
+        });
+        logoutBtn.addEventListener("click", handleLogout);
+        mateForm.addEventListener("submit", handleMateSubmit);
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        bindEvents();
+        initSupabaseClient();
+      });
+    </script>
+  </body>
+</html>
