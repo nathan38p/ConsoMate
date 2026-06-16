@@ -2,8 +2,10 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#dbeafe" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="application-name" content="ConsoMate" />
     <meta name="apple-mobile-web-app-title" content="ConsoMate" />
     <link rel="icon" type="image/png" href="ConsoMate.png" />
@@ -546,8 +548,8 @@
         display: flex;
         font-size: 1.25rem;
         font-weight: 900;
-        gap: 10px;
-        justify-content: space-between;
+        justify-content: flex-start;
+        gap: 12px;
       }
 
       .cost-usage {
@@ -1435,9 +1437,9 @@
               <span class="cost-label">💧 Prévision</span>
               <span class="cost-value">
                 <span>${formatCurrency(waterForecastTotal)}</span>
-                <span class="cost-usage">${formatGraphMax(waterForecast, "m³")}</span>
+                <span>${formatGraphMax(waterForecast, "m³")}</span>
               </span>
-              <span class="cost-detail">${formatCurrency(waterForecastVariableCost)} conso + ${formatCurrency(WATER_FIXED_PRICE_PER_MONTH)} fixe</span>
+              <span class="cost-detail">${formatCurrency(waterForecastVariableCost)} + ${formatCurrency(WATER_FIXED_PRICE_PER_MONTH)}</span>
             </div>`
           : "";
         const electricityForecastCard = electricityForecast
@@ -1445,9 +1447,9 @@
               <span class="cost-label">⚡ Prévision</span>
               <span class="cost-value">
                 <span>${formatCurrency(electricityForecastTotal)}</span>
-                <span class="cost-usage">${formatGraphMax(electricityForecast, "kWh")}</span>
+                <span>${formatGraphMax(electricityForecast, "kWh")}</span>
               </span>
-              <span class="cost-detail">${formatCurrency(electricityForecastVariableCost)} conso + ${formatCurrency(ELECTRICITY_FIXED_PRICE_PER_MONTH)} fixe</span>
+              <span class="cost-detail">${formatCurrency(electricityForecastVariableCost)} + ${formatCurrency(ELECTRICITY_FIXED_PRICE_PER_MONTH)}</span>
             </div>`
           : "";
 
@@ -1456,17 +1458,17 @@
             <span class="cost-label">💧 Eau</span>
             <span class="cost-value">
               <span>${formatCurrency(waterTotal)}</span>
-              <span class="cost-usage">${formatGraphMax(waterConsumption, "m³")}</span>
+              <span>${formatGraphMax(waterConsumption, "m³")}</span>
             </span>
-            <span class="cost-detail">${formatCurrency(waterVariableCost)} conso + ${formatCurrency(WATER_FIXED_PRICE_PER_MONTH)} fixe</span>
+            <span class="cost-detail">${formatCurrency(waterVariableCost)} + ${formatCurrency(WATER_FIXED_PRICE_PER_MONTH)}</span>
           </div>
           <div class="cost-item electricity">
             <span class="cost-label">⚡ Électricité</span>
             <span class="cost-value">
               <span>${formatCurrency(electricityTotal)}</span>
-              <span class="cost-usage">${formatGraphMax(electricityConsumption, "kWh")}</span>
+              <span>${formatGraphMax(electricityConsumption, "kWh")}</span>
             </span>
-            <span class="cost-detail">${formatCurrency(electricityVariableCost)} conso + ${formatCurrency(ELECTRICITY_FIXED_PRICE_PER_MONTH)} fixe</span>
+            <span class="cost-detail">${formatCurrency(electricityVariableCost)} + ${formatCurrency(ELECTRICITY_FIXED_PRICE_PER_MONTH)}</span>
           </div>
           ${waterForecastCard}
           ${electricityForecastCard}
