@@ -577,16 +577,6 @@
             </div>
             <div id="electricity-meter-input" class="meter-input electricity-meter-input hidden">
               <div class="electricity-meter-row">
-                <span class="electricity-meter-label">HP</span>
-                <div class="meter-digits" aria-label="Valeur du compteur heures pleines">
-                  <input class="meter-digit black" type="text" inputmode="numeric" maxlength="1" data-electricity-meter-digit data-electricity-meter="hp" aria-label="Dizaine de milliers heures pleines" />
-                  <input class="meter-digit black" type="text" inputmode="numeric" maxlength="1" data-electricity-meter-digit data-electricity-meter="hp" aria-label="Milliers heures pleines" />
-                  <input class="meter-digit black" type="text" inputmode="numeric" maxlength="1" data-electricity-meter-digit data-electricity-meter="hp" aria-label="Centaines heures pleines" />
-                  <input class="meter-digit black" type="text" inputmode="numeric" maxlength="1" data-electricity-meter-digit data-electricity-meter="hp" aria-label="Dizaines heures pleines" />
-                  <input class="meter-digit black" type="text" inputmode="numeric" maxlength="1" data-electricity-meter-digit data-electricity-meter="hp" aria-label="Unités heures pleines" />
-                </div>
-              </div>
-              <div class="electricity-meter-row">
                 <span class="electricity-meter-label">HC</span>
                 <div class="meter-digits" aria-label="Valeur du compteur heures creuses">
                   <input class="meter-digit black" type="text" inputmode="numeric" maxlength="1" data-electricity-meter-digit data-electricity-meter="hc" aria-label="Dizaine de milliers heures creuses" />
@@ -594,6 +584,16 @@
                   <input class="meter-digit black" type="text" inputmode="numeric" maxlength="1" data-electricity-meter-digit data-electricity-meter="hc" aria-label="Centaines heures creuses" />
                   <input class="meter-digit black" type="text" inputmode="numeric" maxlength="1" data-electricity-meter-digit data-electricity-meter="hc" aria-label="Dizaines heures creuses" />
                   <input class="meter-digit black" type="text" inputmode="numeric" maxlength="1" data-electricity-meter-digit data-electricity-meter="hc" aria-label="Unités heures creuses" />
+                </div>
+              </div>
+              <div class="electricity-meter-row">
+                <span class="electricity-meter-label">HP</span>
+                <div class="meter-digits" aria-label="Valeur du compteur heures pleines">
+                  <input class="meter-digit black" type="text" inputmode="numeric" maxlength="1" data-electricity-meter-digit data-electricity-meter="hp" aria-label="Dizaine de milliers heures pleines" />
+                  <input class="meter-digit black" type="text" inputmode="numeric" maxlength="1" data-electricity-meter-digit data-electricity-meter="hp" aria-label="Milliers heures pleines" />
+                  <input class="meter-digit black" type="text" inputmode="numeric" maxlength="1" data-electricity-meter-digit data-electricity-meter="hp" aria-label="Centaines heures pleines" />
+                  <input class="meter-digit black" type="text" inputmode="numeric" maxlength="1" data-electricity-meter-digit data-electricity-meter="hp" aria-label="Dizaines heures pleines" />
+                  <input class="meter-digit black" type="text" inputmode="numeric" maxlength="1" data-electricity-meter-digit data-electricity-meter="hp" aria-label="Unités heures pleines" />
                 </div>
               </div>
               <div class="meter-caption">
@@ -1253,7 +1253,7 @@
 
         const electricityValues = selectedReadingType === "electricity" ? getElectricityMeterValues() : null;
         if (electricityValues && (Number.isNaN(electricityValues.hp) || Number.isNaN(electricityValues.hc))) {
-          setMessage(readingMessage, "Renseignez les 5 chiffres HP et les 5 chiffres HC.", "error");
+          setMessage(readingMessage, "Renseignez les 5 chiffres HC et les 5 chiffres HP.", "error");
           return;
         }
 
@@ -1329,7 +1329,7 @@
             const totalValue = getReadingTotalValue(reading);
             const hasElectricityDetails = reading.type === "electricity" && reading.value_hp != null && reading.value_hc != null;
             const readingDetail = hasElectricityDetails
-              ? `<div class="reading-detail">HP ${escapeHtml(formatMeterIndex(reading.value_hp))} kWh + HC ${escapeHtml(formatMeterIndex(reading.value_hc))} kWh</div>`
+              ? `<div class="reading-detail">HC ${escapeHtml(formatMeterIndex(reading.value_hc))} kWh + HP ${escapeHtml(formatMeterIndex(reading.value_hp))} kWh</div>`
               : "";
             const deleteButton =
               reading.user_id === currentSession.user.id
