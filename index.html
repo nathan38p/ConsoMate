@@ -548,8 +548,8 @@
         display: flex;
         font-size: 1.25rem;
         font-weight: 900;
-        justify-content: flex-start;
-        gap: 12px;
+        justify-content: space-between;
+        gap: 10px;
       }
 
       .cost-usage {
@@ -621,10 +621,10 @@
         }
 
         .cost-value {
-          align-items: flex-start;
-          flex-direction: column;
+          align-items: baseline;
+          flex-direction: row;
           font-size: 1.05rem;
-          gap: 2px;
+          gap: 8px;
         }
 
         .cost-usage,
@@ -1437,9 +1437,9 @@
               <span class="cost-label">💧 Prévision</span>
               <span class="cost-value">
                 <span>${formatCurrency(waterForecastTotal)}</span>
-                <span>${formatGraphMax(waterForecast, "m³")}</span>
+                <span class="cost-usage">${formatGraphMax(waterForecast, "m³")}</span>
               </span>
-              <span class="cost-detail">${formatCurrency(waterForecastVariableCost)} + ${formatCurrency(WATER_FIXED_PRICE_PER_MONTH)}</span>
+              <span class="cost-detail">${formatCurrency(WATER_FIXED_PRICE_PER_MONTH)} + ${formatCurrency(waterForecastVariableCost)}</span>
             </div>`
           : "";
         const electricityForecastCard = electricityForecast
@@ -1447,9 +1447,9 @@
               <span class="cost-label">⚡ Prévision</span>
               <span class="cost-value">
                 <span>${formatCurrency(electricityForecastTotal)}</span>
-                <span>${formatGraphMax(electricityForecast, "kWh")}</span>
+                <span class="cost-usage">${formatGraphMax(electricityForecast, "kWh")}</span>
               </span>
-              <span class="cost-detail">${formatCurrency(electricityForecastVariableCost)} + ${formatCurrency(ELECTRICITY_FIXED_PRICE_PER_MONTH)}</span>
+              <span class="cost-detail">${formatCurrency(ELECTRICITY_FIXED_PRICE_PER_MONTH)} + ${formatCurrency(electricityForecastVariableCost)}</span>
             </div>`
           : "";
 
@@ -1458,17 +1458,17 @@
             <span class="cost-label">💧 Eau</span>
             <span class="cost-value">
               <span>${formatCurrency(waterTotal)}</span>
-              <span>${formatGraphMax(waterConsumption, "m³")}</span>
+              <span class="cost-usage">${formatGraphMax(waterConsumption, "m³")}</span>
             </span>
-            <span class="cost-detail">${formatCurrency(waterVariableCost)} + ${formatCurrency(WATER_FIXED_PRICE_PER_MONTH)}</span>
+            <span class="cost-detail">${formatCurrency(WATER_FIXED_PRICE_PER_MONTH)} + ${formatCurrency(waterVariableCost)}</span>
           </div>
           <div class="cost-item electricity">
             <span class="cost-label">⚡ Électricité</span>
             <span class="cost-value">
               <span>${formatCurrency(electricityTotal)}</span>
-              <span>${formatGraphMax(electricityConsumption, "kWh")}</span>
+              <span class="cost-usage">${formatGraphMax(electricityConsumption, "kWh")}</span>
             </span>
-            <span class="cost-detail">${formatCurrency(electricityVariableCost)} + ${formatCurrency(ELECTRICITY_FIXED_PRICE_PER_MONTH)}</span>
+            <span class="cost-detail">${formatCurrency(ELECTRICITY_FIXED_PRICE_PER_MONTH)} + ${formatCurrency(electricityVariableCost)}</span>
           </div>
           ${waterForecastCard}
           ${electricityForecastCard}
