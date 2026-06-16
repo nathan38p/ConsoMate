@@ -1305,6 +1305,17 @@
           .join("");
       }
 
+      function createXAxisLabels(chart, daysInMonth) {
+        return [1, 10, 20, daysInMonth]
+          .filter((day, index, days) => days.indexOf(day) === index && day <= daysInMonth)
+          .map((day) => {
+            const x = chart.left + ((day - 1) / Math.max(daysInMonth - 1, 1)) * chart.width;
+            const anchor = day === 1 ? "start" : day === daysInMonth ? "end" : "middle";
+            return `<text x="${x.toFixed(1)}" y="226" fill="#64748b" font-size="12" text-anchor="${anchor}">${day}</text>`;
+          })
+          .join("");
+      }
+
       function formatGraphMax(value, unit) {
         if (value === 0) {
           return `0 ${unit}`;
@@ -1382,14 +1393,12 @@
           width: 520,
           height: 180
         };
-        const graphEndDay = 31;
+        const graphEndDay = new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
         const waterPoints = createPolyline(waterSeries, waterMax, chart, graphEndDay);
         const electricityPoints = createPolyline(electricitySeries, electricityMax, chart, graphEndDay);
         const waterMarkers = createPointCircles(waterSeries, waterMax, chart, graphEndDay, "#2563eb");
         const electricityMarkers = createPointCircles(electricitySeries, electricityMax, chart, graphEndDay, "#f59e0b");
-        const xStart = chart.left;
-        const xMiddle = chart.left + chart.width / 2;
-        const xEnd = chart.left + chart.width;
+        const xAxisLabels = createXAxisLabels(chart, graphEndDay);
 
         graphFrame.innerHTML = `
           <svg viewBox="0 0 650 245" role="img" aria-label="Consommation mensuelle">
@@ -1400,9 +1409,7 @@
             <text x="8" y="${chart.top + chart.height}" fill="#2563eb" font-size="12">${formatGraphMax(0, "m3")}</text>
             <text x="642" y="${chart.top + 12}" fill="#b45309" font-size="12" text-anchor="end">${formatGraphMax(electricityMax, "kWh")}</text>
             <text x="642" y="${chart.top + chart.height}" fill="#b45309" font-size="12" text-anchor="end">${formatGraphMax(0, "kWh")}</text>
-            <text x="${xStart}" y="226" fill="#64748b" font-size="12">1</text>
-            <text x="${xMiddle - 8}" y="226" fill="#64748b" font-size="12">16</text>
-            <text x="${xEnd - 12}" y="226" fill="#64748b" font-size="12">31</text>
+            ${xAxisLabels}
             ${
               waterPoints
                 ? `<polyline points="${waterPoints}" fill="none" stroke="#2563eb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />`
