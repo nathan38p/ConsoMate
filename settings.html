@@ -2,8 +2,10 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="theme-color" content="#dbeafe" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="application-name" content="ConsoMate" />
     <meta name="apple-mobile-web-app-title" content="ConsoMate" />
     <link rel="icon" type="image/png" href="ConsoMate.png" />
@@ -136,6 +138,19 @@
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
+      }
+
+      .notification-row {
+        align-items: center;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: space-between;
+      }
+
+      .notification-row .hint {
+        flex: 1 1 260px;
+        margin: 0;
       }
 
       .message,
@@ -284,6 +299,15 @@
 
         <hr />
 
+        <h2>Notifications</h2>
+        <div class="notification-row">
+          <p class="hint">Recevoir un rappel si aucun relevé n'a été ajouté depuis 5 jours.</p>
+          <button type="button" id="enable-push-btn" class="secondary">Activer les notifications</button>
+        </div>
+        <p id="push-message" class="message"></p>
+
+        <hr />
+
         <h2>Mates</h2>
         <form id="mate-form">
           <label>
@@ -305,6 +329,7 @@
     <script>
       const DEFAULT_SUPABASE_URL = "https://jjafxjyrnysujgwwtkte.supabase.co";
       const DEFAULT_SUPABASE_KEY = "sb_publishable_KZqc80abiojlxzIe5cnJew_-L2IPfvX";
+      const VAPID_PUBLIC_KEY = "BBuRxmWKL_hk2IZ0eYwcSSm-s_-XMXw8Cv4lamzH3585cEXRURRAjj5b_pe9hwNLIfxSrUN1XeYRB-typnBULGE";
 
       let supabaseClient = null;
       let currentSession = null;
@@ -319,6 +344,8 @@
       const mateEmail = document.getElementById("mate-email");
       const settingsMessage = document.getElementById("settings-message");
       const matesList = document.getElementById("mates-list");
+      const enablePushBtn = document.getElementById("enable-push-btn");
+      const pushMessage = document.getElementById("push-message");
 
       function setMessage(element, text, type = "") {
         element.textContent = text;
@@ -332,6 +359,27 @@
           .replaceAll(">", "&gt;")
           .replaceAll('"', "&quot;")
           .replaceAll("'", "&#039;");
+      }
+
+      function urlBase64ToUint8Array(base64String) {
+        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+
+        for (let i = 0; i < rawData.length; i += 1) {
+          outputArray[i] = rawData.charCodeAt(i);
+        }
+
+        return outputArray;
+      }
+
+      async function registerServiceWorker() {
+        if (!("serviceWorker" in navigator)) {
+          throw new Error("Les Service Workers ne sont pas disponibles sur ce navigateur.");
+        }
+
+        return navigator.serviceWorker.register("service-worker.js");
       }
 
       function closeUserMenu() {
@@ -476,6 +524,57 @@
         await loadMates();
       }
 
+      async function handleEnablePush() {
+        if (!supabaseClient || !currentSession) {
+          setMessage(pushMessage, "Connectez-vous pour activer les notifications.", "error");
+          return;
+        }
+
+        if (!("Notification" in window) || !("PushManager" in window)) {
+          setMessage(pushMessage, "Les notifications push ne sont pas disponibles ici. Sur iPhone, installez ConsoMate sur l'écran d'accueil.", "error");
+          return;
+        }
+
+        try {
+          enablePushBtn.disabled = true;
+          setMessage(pushMessage, "Demande d'autorisation...", "");
+
+          const permission = await Notification.requestPermission();
+          if (permission !== "granted") {
+            setMessage(pushMessage, "Notifications refusées.", "error");
+            return;
+          }
+
+          setMessage(pushMessage, "Activation des notifications...", "");
+          const registration = await registerServiceWorker();
+          const existingSubscription = await registration.pushManager.getSubscription();
+          const subscription = existingSubscription || await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+          });
+
+          const { error } = await supabaseClient.from("push_subscriptions").upsert(
+            {
+              user_id: currentSession.user.id,
+              endpoint: subscription.endpoint,
+              subscription: subscription.toJSON()
+            },
+            { onConflict: "user_id,endpoint" }
+          );
+
+          if (error) {
+            setMessage(pushMessage, `Impossible d'enregistrer les notifications : ${error.message}`, "error");
+            return;
+          }
+
+          setMessage(pushMessage, "Notifications activées.", "success");
+        } catch (error) {
+          setMessage(pushMessage, `Impossible d'activer les notifications : ${error.message}`, "error");
+        } finally {
+          enablePushBtn.disabled = false;
+        }
+      }
+
       async function loadMates() {
         matesList.innerHTML = '<p class="empty-state">Chargement...</p>';
         const userId = currentSession.user.id;
@@ -544,6 +643,7 @@
         logoutBtn.addEventListener("click", handleLogout);
         profileForm.addEventListener("submit", handleProfileSubmit);
         mateForm.addEventListener("submit", handleMateSubmit);
+        enablePushBtn.addEventListener("click", handleEnablePush);
       }
 
       document.addEventListener("DOMContentLoaded", () => {
