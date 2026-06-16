@@ -610,7 +610,24 @@
         }
 
         .cost-summary {
-          grid-template-columns: 1fr;
+          gap: 8px;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .cost-item {
+          padding: 10px;
+        }
+
+        .cost-value {
+          align-items: flex-start;
+          flex-direction: column;
+          font-size: 1.05rem;
+          gap: 2px;
+        }
+
+        .cost-usage,
+        .cost-detail {
+          font-size: 0.76rem;
         }
 
         .reading-item {
