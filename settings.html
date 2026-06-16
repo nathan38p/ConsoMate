@@ -330,6 +330,7 @@
       const DEFAULT_SUPABASE_URL = "https://jjafxjyrnysujgwwtkte.supabase.co";
       const DEFAULT_SUPABASE_KEY = "sb_publishable_KZqc80abiojlxzIe5cnJew_-L2IPfvX";
       const VAPID_PUBLIC_KEY = "BBuRxmWKL_hk2IZ0eYwcSSm-s_-XMXw8Cv4lamzH3585cEXRURRAjj5b_pe9hwNLIfxSrUN1XeYRB-typnBULGE";
+      const APP_VERSION = "2026.06.17.1";
 
       let supabaseClient = null;
       let currentSession = null;
@@ -346,6 +347,17 @@
       const matesList = document.getElementById("mates-list");
       const enablePushBtn = document.getElementById("enable-push-btn");
       const pushMessage = document.getElementById("push-message");
+
+      function refreshInstalledAppIfNeeded() {
+        const storedVersion = localStorage.getItem("consomate_app_version");
+        if (storedVersion && storedVersion !== APP_VERSION) {
+          localStorage.setItem("consomate_app_version", APP_VERSION);
+          window.location.reload();
+          return;
+        }
+
+        localStorage.setItem("consomate_app_version", APP_VERSION);
+      }
 
       function setMessage(element, text, type = "") {
         element.textContent = text;
@@ -647,6 +659,7 @@
       }
 
       document.addEventListener("DOMContentLoaded", () => {
+        refreshInstalledAppIfNeeded();
         bindEvents();
         initSupabaseClient();
       });
