@@ -14,15 +14,15 @@
     <title>ConsoMate</title>
     <style>
       :root {
-        --bg: #dbeafe;
-        --card: #ffffff;
-        --text: #172033;
-        --muted: #64748b;
+        --bg: #000000;
+        --card: #18181b;
+        --text: #ffffff;
+        --muted: #cbd5e1;
         --accent: #2563eb;
         --accent-dark: #1d4ed8;
         --danger: #dc2626;
         --success: #15803d;
-        --border: #e2e8f0;
+        --border: #3f3f46;
       }
 
       * {
@@ -110,7 +110,7 @@
         padding: 10px 12px;
         border: 1px solid var(--border);
         border-radius: 10px;
-        background: #fcfdff;
+        background: #2a2a2a;
         color: var(--text);
       }
 
@@ -154,7 +154,7 @@
 
       .user-menu-btn {
         align-items: center;
-        background: var(--card);
+        background: #2a2a2a;
         border: 1px solid var(--border);
         color: var(--text);
         display: flex;
@@ -197,7 +197,7 @@
       }
 
       .user-menu-popover button:hover {
-        background: #f1f5f9;
+        background: #2a2a2a;
       }
 
       .user-menu-popover button.danger-action {
@@ -395,7 +395,7 @@
       .reading-item {
         align-items: center;
         border: 1px solid var(--border);
-        background: #fcfdff;
+        background: #242424;
         border-radius: 10px;
         display: flex;
         gap: 12px;
@@ -1673,7 +1673,7 @@
           .map((reading) => {
             const typeLabel = reading.type === "water" ? "Eau" : "Électricité";
             const typeClass = reading.type === "water" ? "water" : "electricity";
-            const ownerLabel = profileLabelsById[reading.user_id] || (reading.user_id === currentSession.user.id ? "Moi" : "Mate");
+            // const ownerLabel = profileLabelsById[reading.user_id] || (reading.user_id === currentSession.user.id ? "Moi" : "Mate");
             const totalValue = getReadingTotalValue(reading);
             const hasElectricityDetails = reading.type === "electricity" && reading.value_hp != null && reading.value_hc != null;
             // Removed readingDetail declaration
@@ -1693,7 +1693,7 @@
             return `
               <article class="reading-item ${typeClass} ${hasElectricityDetails ? "clickable" : ""}" ${hasElectricityDetails ? `data-electricity-detail="HC ${escapeHtml(formatMeterIndex(reading.value_hc))} kWh\nHP ${escapeHtml(formatMeterIndex(reading.value_hp))} kWh"` : ""}>
                 <div class="reading-content">
-                  <strong>${typeLabel} — ${escapeHtml(totalValue)} ${escapeHtml(reading.unit)}<span class="owner-pill">${escapeHtml(ownerLabel)}</span></strong>
+                  <strong>${typeLabel} — ${escapeHtml(totalValue)} ${escapeHtml(reading.unit)}</strong>
                   <div class="reading-date">${escapeHtml(formatReadingDate(getReadingDatetime(reading)))}</div>
                 </div>
                 <div class="reading-footer">
