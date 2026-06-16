@@ -448,6 +448,18 @@
         justify-content: flex-end;
       }
 
+      .reading-content {
+        flex: 1;
+      }
+
+      .reading-item.clickable {
+        cursor: pointer;
+      }
+
+      .reading-item.clickable:hover {
+        transform: translateY(-1px);
+      }
+
       .delete-reading-btn {
         align-items: center;
         display: inline-flex;
@@ -1699,9 +1711,7 @@
             const ownerLabel = profileLabelsById[reading.user_id] || (reading.user_id === currentSession.user.id ? "Moi" : "Mate");
             const totalValue = getReadingTotalValue(reading);
             const hasElectricityDetails = reading.type === "electricity" && reading.value_hp != null && reading.value_hc != null;
-            const readingDetail = hasElectricityDetails
-              ? `<div class="reading-detail">HC ${escapeHtml(formatMeterIndex(reading.value_hc))} kWh + HP ${escapeHtml(formatMeterIndex(reading.value_hp))} kWh</div>`
-              : "";
+            // Removed readingDetail declaration
             const deleteButton =
               reading.user_id === currentSession.user.id
                 ? `<button type="button" class="danger delete-reading-btn" data-delete-reading-id="${escapeHtml(reading.id)}" aria-label="Supprimer" title="Supprimer">
@@ -1716,11 +1726,10 @@
                 : "";
 
             return `
-              <article class="reading-item ${typeClass}">
-                <div>
+              <article class="reading-item ${typeClass} ${hasElectricityDetails ? "clickable" : ""}" ${hasElectricityDetails ? `data-electricity-detail="HC ${escapeHtml(formatMeterIndex(reading.value_hc))} kWh\nHP ${escapeHtml(formatMeterIndex(reading.value_hp))} kWh"` : ""}>
+                <div class="reading-content">
                   <strong>${typeLabel} — ${escapeHtml(totalValue)} ${escapeHtml(reading.unit)}<span class="owner-pill">${escapeHtml(ownerLabel)}</span></strong>
                   <div class="reading-date">${escapeHtml(formatReadingDate(getReadingDatetime(reading)))}</div>
-                  ${readingDetail}
                 </div>
                 <div class="reading-footer">
                   ${deleteButton}
@@ -1772,7 +1781,14 @@
         readingsList.addEventListener("click", (event) => {
           const deleteButton = event.target.closest("[data-delete-reading-id]");
           if (deleteButton) {
+            event.stopPropagation();
             deleteReading(deleteButton.dataset.deleteReadingId);
+            return;
+          }
+
+          const detailItem = event.target.closest("[data-electricity-detail]");
+          if (detailItem) {
+            window.alert(detailItem.dataset.electricityDetail);
           }
         });
         document.querySelectorAll("[data-reading-type]").forEach((button) => {
