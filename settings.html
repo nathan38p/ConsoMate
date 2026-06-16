@@ -158,6 +158,18 @@
         padding: 10px 12px;
       }
 
+      .mate-name {
+        display: block;
+        font-weight: 800;
+      }
+
+      .mate-email {
+        color: var(--muted);
+        display: block;
+        font-size: 0.9rem;
+        margin-top: 2px;
+      }
+
       .user-menu {
         margin-left: auto;
         position: relative;
@@ -245,9 +257,22 @@
 
       <section class="card" id="settings-card">
         <div class="toolbar">
-          <h2 style="margin: 0; flex: 1">Mates</h2>
+          <h2 style="margin: 0; flex: 1">Réglages</h2>
         </div>
 
+        <form id="profile-form">
+          <label>
+            Votre prénom
+            <input id="profile-first-name" type="text" autocomplete="given-name" placeholder="Nathan" maxlength="60" />
+          </label>
+          <div class="actions">
+            <button type="submit" class="primary">Enregistrer le prénom</button>
+          </div>
+        </form>
+
+        <hr />
+
+        <h2>Mates</h2>
         <form id="mate-form">
           <label>
             E-mail du mate
@@ -276,6 +301,8 @@
       const userMenuBtn = document.getElementById("user-menu-btn");
       const userMenuPopover = document.getElementById("user-menu-popover");
       const logoutBtn = document.getElementById("logout-btn");
+      const profileForm = document.getElementById("profile-form");
+      const profileFirstName = document.getElementById("profile-first-name");
       const mateForm = document.getElementById("mate-form");
       const mateEmail = document.getElementById("mate-email");
       const settingsMessage = document.getElementById("settings-message");
@@ -336,6 +363,7 @@
 
         userMenu.classList.remove("hidden");
         await ensureCurrentProfile();
+        await loadCurrentProfile();
         await loadMates();
       }
 
@@ -344,6 +372,41 @@
           id: currentSession.user.id,
           email: currentSession.user.email.toLowerCase()
         });
+      }
+
+      async function loadCurrentProfile() {
+        const { data, error } = await supabaseClient
+          .from("profiles")
+          .select("first_name")
+          .eq("id", currentSession.user.id)
+          .maybeSingle();
+
+        if (!error && data?.first_name) {
+          profileFirstName.value = data.first_name;
+        }
+      }
+
+      async function handleProfileSubmit(event) {
+        event.preventDefault();
+        if (!supabaseClient || !currentSession) {
+          setMessage(settingsMessage, "Connectez-vous pour enregistrer votre prénom.", "error");
+          return;
+        }
+
+        const firstName = profileFirstName.value.trim();
+        const { error } = await supabaseClient.from("profiles").upsert({
+          id: currentSession.user.id,
+          email: currentSession.user.email.toLowerCase(),
+          first_name: firstName || null
+        });
+
+        if (error) {
+          setMessage(settingsMessage, `Impossible d'enregistrer le prénom : ${error.message}`, "error");
+          return;
+        }
+
+        setMessage(settingsMessage, "Prénom enregistré.", "success");
+        await loadMates();
       }
 
       async function handleMateSubmit(event) {
@@ -367,7 +430,7 @@
         setMessage(settingsMessage, "Recherche du mate...", "");
         const { data: profile, error: profileError } = await supabaseClient
           .from("profiles")
-          .select("id,email")
+          .select("id,email,first_name")
           .eq("email", email)
           .maybeSingle();
 
@@ -422,7 +485,7 @@
 
         const { data: profiles, error: profilesError } = await supabaseClient
           .from("profiles")
-          .select("id,email")
+          .select("id,email,first_name")
           .in("id", mateIds);
 
         if (profilesError) {
@@ -430,13 +493,21 @@
           return;
         }
 
-        const emailsById = {};
+        const profilesById = {};
         (profiles || []).forEach((profile) => {
-          emailsById[profile.id] = profile.email;
+          profilesById[profile.id] = profile;
         });
 
         matesList.innerHTML = mateIds
-          .map((id) => `<div class="mate-item">${escapeHtml(emailsById[id] || id)}</div>`)
+          .map((id) => {
+            const profile = profilesById[id];
+            const name = profile?.first_name?.trim() || profile?.email || id;
+            const emailDetail = profile?.first_name?.trim() && profile?.email
+              ? `<span class="mate-email">${escapeHtml(profile.email)}</span>`
+              : "";
+
+            return `<div class="mate-item"><span class="mate-name">${escapeHtml(name)}</span>${emailDetail}</div>`;
+          })
           .join("");
       }
 
@@ -459,6 +530,7 @@
           }
         });
         logoutBtn.addEventListener("click", handleLogout);
+        profileForm.addEventListener("submit", handleProfileSubmit);
         mateForm.addEventListener("submit", handleMateSubmit);
       }
 

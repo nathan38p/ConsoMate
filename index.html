@@ -684,7 +684,7 @@
 
       <section class="card hidden" id="graph-card">
         <div class="graph-toolbar">
-          <h2 style="margin: 0">Graphe</h2>
+          <h2 style="margin: 0">Consommation mensuelle</h2>
           <div class="month-controls">
             <button type="button" id="prev-month-btn" aria-label="Mois précédent">‹</button>
             <span id="graph-month-label" class="month-label"></span>
@@ -698,7 +698,7 @@
       <section class="card hidden" id="readings-card">
         <p id="reading-message" class="message"></p>
 
-        <h2>Derniers relevés partagés</h2>
+        <h2>Derniers relevés</h2>
         <div id="readings-list" class="empty-state">Chargement…</div>
       </section>
     </main>
@@ -720,7 +720,7 @@
       let selectedGraphMonth = new Date();
       let graphReadings = [];
       let sharedUserIds = [];
-      let profileEmailsById = {};
+      let profileLabelsById = {};
 
       const authForm = document.getElementById("auth-form");
       const authMessage = document.getElementById("auth-message");
@@ -862,6 +862,10 @@
           id: currentSession.user.id,
           email: currentSession.user.email.toLowerCase()
         });
+      }
+
+      function getProfileLabel(profile) {
+        return profile?.first_name?.trim() || profile?.email || "Mate";
       }
 
       async function refreshSharedData() {
@@ -1216,7 +1220,7 @@
           <div class="cost-item electricity">
             <span class="cost-label">⚡ Électricité</span>
             <span class="cost-value">${formatCurrency(electricityTotal)}</span>
-            <span class="cost-detail">${formatCurrency(electricityVariableCost)} conso + ${formatCurrency(ELECTRICITY_FIXED_PRICE_PER_MONTH)} abo.</span>
+            <span class="cost-detail">${formatCurrency(electricityVariableCost)} conso + ${formatCurrency(ELECTRICITY_FIXED_PRICE_PER_MONTH)} fixe</span>
           </div>
         `;
       }
@@ -1322,7 +1326,7 @@
 
         const userId = currentSession.user.id;
         sharedUserIds = [userId];
-        profileEmailsById = {
+        profileLabelsById = {
           [userId]: currentSession.user.email
         };
 
@@ -1337,22 +1341,19 @@
 
         const mateIds = [...new Set((mateRows || []).map((row) => (row.owner_id === userId ? row.mate_id : row.owner_id)))];
         sharedUserIds = [userId, ...mateIds];
-
-        if (mateIds.length === 0) {
-          return;
-        }
+        const profileIds = [userId, ...mateIds];
 
         const { data: profiles, error: profilesError } = await supabaseClient
           .from("profiles")
-          .select("id,email")
-          .in("id", mateIds);
+          .select("id,email,first_name")
+          .in("id", profileIds);
 
         if (profilesError) {
           return;
         }
 
         (profiles || []).forEach((profile) => {
-          profileEmailsById[profile.id] = profile.email;
+          profileLabelsById[profile.id] = getProfileLabel(profile);
         });
       }
 
@@ -1445,7 +1446,7 @@
           .map((reading) => {
             const typeLabel = reading.type === "water" ? "Eau" : "Électricité";
             const typeClass = reading.type === "water" ? "water" : "electricity";
-            const ownerLabel = reading.user_id === currentSession.user.id ? "Moi" : profileEmailsById[reading.user_id] || "Mate";
+            const ownerLabel = profileLabelsById[reading.user_id] || (reading.user_id === currentSession.user.id ? "Moi" : "Mate");
             const totalValue = getReadingTotalValue(reading);
             const hasElectricityDetails = reading.type === "electricity" && reading.value_hp != null && reading.value_hc != null;
             const readingDetail = hasElectricityDetails
@@ -1479,7 +1480,7 @@
         await supabaseClient.auth.signOut();
         currentSession = null;
         sharedUserIds = [];
-        profileEmailsById = {};
+        profileLabelsById = {};
         closeUserMenu();
         setAppVisible(false);
         setMessage(authMessage, "Vous avez été déconnecté.", "success");

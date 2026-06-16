@@ -24,6 +24,7 @@ create table if not exists public.readings (
 create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text not null unique,
+  first_name text,
   created_at timestamptz not null default now()
 );
 
@@ -59,6 +60,9 @@ add column if not exists value_hp numeric;
 alter table public.readings
 add column if not exists value_hc numeric;
 
+alter table public.profiles
+add column if not exists first_name text;
+
 update public.readings
 set reading_datetime_local = reading_date at time zone 'Europe/Paris'
 where reading_datetime_local is null;
@@ -76,10 +80,11 @@ security definer
 set search_path = public
 as $$
 begin
-  insert into public.profiles (id, email)
-  values (new.id, lower(new.email))
+  insert into public.profiles (id, email, first_name)
+  values (new.id, lower(new.email), nullif(trim(new.raw_user_meta_data ->> 'first_name'), ''))
   on conflict (id) do update
-  set email = excluded.email;
+  set email = excluded.email,
+      first_name = coalesce(public.profiles.first_name, excluded.first_name);
 
   return new;
 end;
@@ -163,7 +168,8 @@ using (auth.uid() = owner_id or auth.uid() = mate_id);
 
 1. Ouvrez la page dans votre navigateur.
 2. Créez un compte ou connectez-vous.
-3. Ajoutez ensuite vos relevés d'eau ou d'électricité.
-4. Ouvrez les réglages pour ajouter un mate par e-mail et voir les relevés partagés.
+3. Ouvrez les réglages pour renseigner votre prénom.
+4. Ajoutez ensuite vos relevés d'eau ou d'électricité.
+5. Ouvrez les réglages pour ajouter un mate par e-mail et voir les relevés partagés.
 
 Le graphe peut afficher les consommations en euros avec les tarifs `3,0833 €/m³` pour l'eau et `0,1940 €/kWh` pour l'électricité. Le résumé mensuel ajoute aussi les parts fixes : `20,20 €` par semestre pour l'eau et `187,82 €` par an pour l'électricité.
