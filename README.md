@@ -12,6 +12,8 @@ create table if not exists public.readings (
   user_id uuid not null references auth.users(id) on delete cascade,
   type text not null check (type in ('water', 'electricity')),
   value numeric not null,
+  value_hp numeric,
+  value_hc numeric,
   unit text not null,
   reading_date timestamptz not null default now(),
   reading_datetime_local timestamp not null default (now() at time zone 'Europe/Paris'),
@@ -50,6 +52,12 @@ alter column reading_date set default now();
 
 alter table public.readings
 add column if not exists reading_datetime_local timestamp;
+
+alter table public.readings
+add column if not exists value_hp numeric;
+
+alter table public.readings
+add column if not exists value_hc numeric;
 
 update public.readings
 set reading_datetime_local = reading_date at time zone 'Europe/Paris'
