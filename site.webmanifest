@@ -1,0 +1,16 @@
+{
+  "name": "ConsoMate",
+  "short_name": "ConsoMate",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#dbeafe",
+  "theme_color": "#dbeafe",
+  "icons": [
+    {
+      "src": "ConsoMate.png",
+      "sizes": "1254x1254",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
