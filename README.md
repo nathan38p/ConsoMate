@@ -165,3 +165,5 @@ using (auth.uid() = owner_id or auth.uid() = mate_id);
 2. Créez un compte ou connectez-vous.
 3. Ajoutez ensuite vos relevés d'eau ou d'électricité.
 4. Ouvrez les réglages pour ajouter un mate par e-mail et voir les relevés partagés.
+
+Le graphe peut afficher les consommations en euros avec les tarifs `3,0833 €/m³` pour l'eau et `0,1940 €/kWh` pour l'électricité. Le résumé mensuel ajoute aussi les parts fixes : `20,20 €` par semestre pour l'eau et `187,82 €` par an pour l'électricité.
