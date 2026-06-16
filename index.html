@@ -477,28 +477,10 @@
       .graph-toolbar {
         align-items: center;
         display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
         justify-content: space-between;
         margin-bottom: 12px;
       }
 
-      .month-controls {
-        align-items: center;
-        display: flex;
-        gap: 8px;
-      }
-
-      .month-controls button {
-        align-items: center;
-        background: #e2e8f0;
-        color: var(--text);
-        display: flex;
-        height: 36px;
-        justify-content: center;
-        padding: 0;
-        width: 36px;
-      }
 
       .month-label {
         color: var(--text);
@@ -594,20 +576,6 @@
           flex-wrap: wrap;
           gap: 8px;
           margin-bottom: 6px;
-        }
-
-        .graph-toolbar h2 {
-          font-size: 1rem;
-        }
-
-        .month-controls {
-          gap: 6px;
-          margin-left: auto;
-        }
-
-        .month-controls button {
-          height: 30px;
-          width: 30px;
         }
 
         .month-label {
@@ -766,12 +734,9 @@
 
       <section class="card hidden" id="graph-card">
         <div class="graph-toolbar">
-          <h2 style="margin: 0">Consommation</h2>
-          <div class="month-controls">
-            <button type="button" id="prev-month-btn" aria-label="Mois précédent">‹</button>
-            <span id="graph-month-label" class="month-label"></span>
-            <button type="button" id="next-month-btn" aria-label="Mois suivant">›</button>
-          </div>
+          <button type="button" id="prev-month-btn" aria-label="Mois précédent">‹</button>
+          <span id="graph-month-label" class="month-label"></span>
+          <button type="button" id="next-month-btn" aria-label="Mois suivant">›</button>
         </div>
         <div id="graph-frame" class="graph-frame"></div>
         <div id="graph-cost-summary" class="cost-summary"></div>
