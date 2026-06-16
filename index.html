@@ -3,10 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#dbeafe" />
     <title>ConsoMate</title>
     <style>
       :root {
-        --bg: #f5f7fb;
+        --bg: #dbeafe;
         --card: #ffffff;
         --text: #172033;
         --muted: #64748b;
@@ -21,11 +22,17 @@
         box-sizing: border-box;
       }
 
+      html,
+      body {
+        background: var(--bg);
+        min-height: 100%;
+      }
+
       body {
         margin: 0;
         font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        background: linear-gradient(135deg, #eff6ff 0%, var(--bg) 100%);
         color: var(--text);
+        min-height: 100vh;
       }
 
       .container {
@@ -231,6 +238,17 @@
         padding-left: 0;
       }
 
+      .auth-secondary-action {
+        margin: 0;
+      }
+
+      .auth-secondary-action button {
+        color: var(--muted);
+        font-size: 0.92rem;
+        font-weight: 700;
+        padding: 0;
+      }
+
       .hint,
       .message,
       .empty-state {
@@ -424,7 +442,17 @@
       }
 
       .delete-reading-btn {
-        padding: 6px 10px;
+        align-items: center;
+        display: inline-flex;
+        height: 34px;
+        justify-content: center;
+        padding: 0;
+        width: 34px;
+      }
+
+      .delete-reading-btn svg {
+        height: 17px;
+        width: 17px;
       }
 
       .graph-toolbar {
@@ -593,20 +621,23 @@
       </header>
 
       <section class="card" id="auth-card">
-        <h2>Connexion</h2>
+        <h2 id="auth-title">Connexion</h2>
         <form id="auth-form" autocomplete="on">
-          <label>
+          <label id="auth-email-label">
             E-mail
             <input id="auth-email" name="email" type="email" autocomplete="email" required />
           </label>
-          <label>
-            Mot de passe
+          <label id="auth-password-label">
+            <span id="auth-password-label-text">Mot de passe</span>
             <input id="auth-password" name="password" type="password" autocomplete="current-password" minlength="6" required />
           </label>
           <div class="actions">
             <button type="submit" id="auth-submit-btn" class="primary">Se connecter</button>
             <button type="button" id="signup-btn" class="secondary">Créer un compte</button>
           </div>
+          <p class="auth-secondary-action">
+            <button type="button" id="forgot-password-btn" class="ghost">Mot de passe oublié ?</button>
+          </p>
         </form>
         <p id="auth-message" class="message"></p>
       </section>
@@ -684,7 +715,7 @@
 
       <section class="card hidden" id="graph-card">
         <div class="graph-toolbar">
-          <h2 style="margin: 0">Consommation mensuelle</h2>
+          <h2 style="margin: 0">Consommation</h2>
           <div class="month-controls">
             <button type="button" id="prev-month-btn" aria-label="Mois précédent">‹</button>
             <span id="graph-month-label" class="month-label"></span>
@@ -723,9 +754,13 @@
       let profileLabelsById = {};
 
       const authForm = document.getElementById("auth-form");
+      const authTitle = document.getElementById("auth-title");
       const authMessage = document.getElementById("auth-message");
+      const authEmailLabel = document.getElementById("auth-email-label");
+      const authPasswordLabelText = document.getElementById("auth-password-label-text");
       const authSubmitBtn = document.getElementById("auth-submit-btn");
       const signupBtn = document.getElementById("signup-btn");
+      const forgotPasswordBtn = document.getElementById("forgot-password-btn");
       const topActions = document.getElementById("top-actions");
       const addReadingBtn = document.getElementById("add-reading-btn");
       const userMenu = document.getElementById("user-menu");
@@ -766,6 +801,16 @@
       }
 
       function setAppVisible(isLoggedIn) {
+        if (authMode === "update_password") {
+          authCard.classList.remove("hidden");
+          topActions.classList.add("hidden");
+          graphCard.classList.add("hidden");
+          readingsCard.classList.add("hidden");
+          appCard.classList.add("hidden");
+          closeUserMenu();
+          return;
+        }
+
         authCard.classList.toggle("hidden", isLoggedIn);
         topActions.classList.toggle("hidden", !isLoggedIn);
         graphCard.classList.toggle("hidden", !isLoggedIn);
@@ -776,6 +821,10 @@
         if (!isLoggedIn) {
           closeUserMenu();
         }
+      }
+
+      function getAuthRedirectUrl() {
+        return window.location.href.split("#")[0].split("?")[0];
       }
 
       function closeUserMenu() {
@@ -841,6 +890,11 @@
 
         supabaseClient.auth.onAuthStateChange((_event, session) => {
           currentSession = session;
+          if (_event === "PASSWORD_RECOVERY") {
+            showPasswordUpdateMode();
+            return;
+          }
+
           setAppVisible(Boolean(session));
           if (session) {
             refreshSharedData();
@@ -884,6 +938,29 @@
         const email = document.getElementById("auth-email").value.trim();
         const password = document.getElementById("auth-password").value;
 
+        if (authMode === "update_password") {
+          if (!password) {
+            setMessage(authMessage, "Saisissez votre nouveau mot de passe.", "error");
+            return;
+          }
+
+          setMessage(authMessage, "Mise à jour du mot de passe…", "");
+          const { error } = await supabaseClient.auth.updateUser({ password });
+          if (error) {
+            setMessage(authMessage, error.message, "error");
+            return;
+          }
+
+          authMode = "signin";
+          setAuthFormMode();
+          setMessage(authMessage, "Mot de passe mis à jour.", "success");
+          setAppVisible(Boolean(currentSession));
+          if (currentSession) {
+            refreshSharedData();
+          }
+          return;
+        }
+
         if (!email || !password) {
           setMessage(authMessage, "Saisissez un e-mail et un mot de passe.", "error");
           return;
@@ -924,9 +1001,58 @@
 
       function toggleAuthMode() {
         authMode = authMode === "signin" ? "signup" : "signin";
-        signupBtn.textContent = authMode === "signin" ? "Créer un compte" : "Retour à la connexion";
-        authSubmitBtn.textContent = authMode === "signin" ? "Se connecter" : "Créer le compte";
-        document.getElementById("auth-password").autocomplete = authMode === "signin" ? "current-password" : "new-password";
+        setAuthFormMode();
+        setAppVisible(Boolean(currentSession));
+      }
+
+      function setAuthFormMode() {
+        const emailInput = document.getElementById("auth-email");
+        const passwordInput = document.getElementById("auth-password");
+        const isSignup = authMode === "signup";
+        const isPasswordUpdate = authMode === "update_password";
+
+        authTitle.textContent = isPasswordUpdate ? "Nouveau mot de passe" : isSignup ? "Créer un compte" : "Connexion";
+        authEmailLabel.classList.toggle("hidden", isPasswordUpdate);
+        emailInput.required = !isPasswordUpdate;
+        authPasswordLabelText.textContent = isPasswordUpdate ? "Nouveau mot de passe" : "Mot de passe";
+        passwordInput.autocomplete = isSignup || isPasswordUpdate ? "new-password" : "current-password";
+        authSubmitBtn.textContent = isPasswordUpdate ? "Mettre à jour" : isSignup ? "Créer le compte" : "Se connecter";
+        signupBtn.textContent = isSignup || isPasswordUpdate ? "Retour à la connexion" : "Créer un compte";
+        forgotPasswordBtn.classList.toggle("hidden", authMode !== "signin");
+      }
+
+      function showPasswordUpdateMode() {
+        authMode = "update_password";
+        setAuthFormMode();
+        document.getElementById("auth-password").value = "";
+        setMessage(authMessage, "Saisissez votre nouveau mot de passe.", "");
+        setAppVisible(false);
+      }
+
+      async function handleForgotPassword() {
+        if (!supabaseClient) {
+          setMessage(authMessage, "La connexion Supabase n’est pas prête.", "error");
+          return;
+        }
+
+        const email = document.getElementById("auth-email").value.trim();
+        if (!email) {
+          setMessage(authMessage, "Saisissez votre e-mail pour recevoir le lien.", "error");
+          return;
+        }
+
+        localStorage.setItem(LAST_EMAIL_KEY, email);
+        setMessage(authMessage, "Envoi du lien de réinitialisation…", "");
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
+          redirectTo: getAuthRedirectUrl()
+        });
+
+        if (error) {
+          setMessage(authMessage, error.message, "error");
+          return;
+        }
+
+        setMessage(authMessage, "Lien envoyé. Vérifiez votre boîte mail.", "success");
       }
 
       function toggleSettings() {
@@ -1454,7 +1580,15 @@
               : "";
             const deleteButton =
               reading.user_id === currentSession.user.id
-                ? `<button type="button" class="danger delete-reading-btn" data-delete-reading-id="${escapeHtml(reading.id)}">Supprimer</button>`
+                ? `<button type="button" class="danger delete-reading-btn" data-delete-reading-id="${escapeHtml(reading.id)}" aria-label="Supprimer" title="Supprimer">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M3 6h18" />
+                      <path d="M8 6V4h8v2" />
+                      <path d="M19 6l-1 14H6L5 6" />
+                      <path d="M10 11v5" />
+                      <path d="M14 11v5" />
+                    </svg>
+                  </button>`
                 : "";
 
             return `
@@ -1491,6 +1625,7 @@
         signupBtn.addEventListener("click", () => {
           toggleAuthMode();
         });
+        forgotPasswordBtn.addEventListener("click", handleForgotPassword);
         userMenuBtn.addEventListener("click", (event) => {
           event.stopPropagation();
           toggleUserMenu();
@@ -1530,6 +1665,7 @@
       document.addEventListener("DOMContentLoaded", () => {
         restoreSavedEmail();
         initDefaultDate();
+        setAuthFormMode();
         selectReadingType(selectedReadingType);
         bindEvents();
         initSupabaseClient();
