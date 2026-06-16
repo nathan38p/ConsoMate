@@ -1432,7 +1432,7 @@
         const electricityForecastTotal = electricityForecast ? electricityForecastVariableCost + ELECTRICITY_FIXED_PRICE_PER_MONTH : 0;
         const waterForecastCard = waterForecast
           ? `<div class="cost-item water forecast">
-              <span class="cost-label">💧 Prévision eau</span>
+              <span class="cost-label">💧 Prévision</span>
               <span class="cost-value">
                 <span>${formatCurrency(waterForecastTotal)}</span>
                 <span class="cost-usage">${formatGraphMax(waterForecast, "m³")}</span>
@@ -1442,7 +1442,7 @@
           : "";
         const electricityForecastCard = electricityForecast
           ? `<div class="cost-item electricity forecast">
-              <span class="cost-label">⚡ Prévision électricité</span>
+              <span class="cost-label">⚡ Prévision</span>
               <span class="cost-value">
                 <span>${formatCurrency(electricityForecastTotal)}</span>
                 <span class="cost-usage">${formatGraphMax(electricityForecast, "kWh")}</span>
