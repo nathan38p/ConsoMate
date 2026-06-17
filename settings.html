@@ -169,6 +169,47 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
+      .rate-card {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        display: grid;
+        gap: 12px;
+        padding: 12px;
+      }
+
+      .rate-card.water {
+        background: #eff6ff;
+        border-color: #bfdbfe;
+        color: #1d4ed8;
+      }
+
+      .rate-card.electricity {
+        background: #fffbeb;
+        border-color: #fde68a;
+        color: #b45309;
+      }
+
+      .rate-card-title {
+        font-size: 0.9rem;
+        font-weight: 900;
+      }
+
+      .rate-fields {
+        display: grid;
+        gap: 10px;
+      }
+
+      .rate-card label {
+        color: inherit;
+        font-size: 0.88rem;
+      }
+
+      .rate-card input {
+        background: rgba(255, 255, 255, 0.88);
+        border-color: rgba(15, 23, 42, 0.16);
+        color: #0f172a;
+      }
+
       .message,
       .empty-state,
       .hint {
@@ -286,7 +327,20 @@
         }
 
         .rate-grid {
-          grid-template-columns: 1fr;
+          gap: 8px;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        .rate-card {
+          padding: 10px;
+        }
+
+        .rate-card label {
+          font-size: 0.8rem;
+        }
+
+        .rate-card input {
+          padding: 9px 8px;
         }
       }
     </style>
@@ -328,30 +382,40 @@
         <h2>Tarifs</h2>
         <form id="rates-form">
           <div class="rate-grid">
-            <label>
-              Abonnement eau mensuel
-              <input id="water-fixed-price" type="number" inputmode="decimal" min="0" step="0.01" required />
-            </label>
-            <label>
-              Prix du m³
-              <input id="water-price-m3" type="number" inputmode="decimal" min="0" step="0.0001" required />
-            </label>
-            <label>
-              Abonnement électricité mensuel
-              <input id="electricity-fixed-price" type="number" inputmode="decimal" min="0" step="0.01" required />
-            </label>
-            <label>
-              Prix du kWh
-              <input id="electricity-price-kwh" type="number" inputmode="decimal" min="0" step="0.0001" required />
-            </label>
-            <label>
-              Mensualisation eau
-              <input id="water-monthly-payment-price" type="number" inputmode="decimal" min="0" step="0.01" required />
-            </label>
-            <label>
-              Mensualisation électricité
-              <input id="electricity-monthly-payment-price" type="number" inputmode="decimal" min="0" step="0.01" required />
-            </label>
+            <div class="rate-card water">
+              <div class="rate-card-title">💧 Eau</div>
+              <div class="rate-fields">
+                <label>
+                  Abonnement
+                  <input id="water-fixed-price" type="number" inputmode="decimal" min="0" step="0.01" required />
+                </label>
+                <label>
+                  Prix du m³
+                  <input id="water-price-m3" type="number" inputmode="decimal" min="0" step="0.0001" required />
+                </label>
+                <label>
+                  Mensualisation
+                  <input id="water-monthly-payment-price" type="number" inputmode="decimal" min="0" step="0.01" required />
+                </label>
+              </div>
+            </div>
+            <div class="rate-card electricity">
+              <div class="rate-card-title">⚡ Électricité</div>
+              <div class="rate-fields">
+                <label>
+                  Abonnement
+                  <input id="electricity-fixed-price" type="number" inputmode="decimal" min="0" step="0.01" required />
+                </label>
+                <label>
+                  Prix du kWh
+                  <input id="electricity-price-kwh" type="number" inputmode="decimal" min="0" step="0.0001" required />
+                </label>
+                <label>
+                  Mensualisation
+                  <input id="electricity-monthly-payment-price" type="number" inputmode="decimal" min="0" step="0.01" required />
+                </label>
+              </div>
+            </div>
           </div>
           <div class="actions">
             <button type="submit" class="primary">Enregistrer les tarifs</button>
