@@ -571,12 +571,6 @@
         white-space: nowrap;
       }
 
-      .cost-detail {
-        color: #64748b;
-        font-size: 0.82rem;
-        line-height: 1.35;
-      }
-
       @media (max-width: 640px) {
         .container {
           padding: 20px 12px 40px;
@@ -628,8 +622,7 @@
           font-size: 1rem;
         }
 
-        .cost-usage,
-        .cost-detail {
+        .cost-usage {
           font-size: 0.76rem;
         }
 
@@ -1515,11 +1508,10 @@
         const waterForecastCard = waterForecast
           ? `<div class="cost-item water forecast">
               <span class="cost-heading">
-                <span class="cost-label">💧 Prévision</span>
+                <span class="cost-label">Prévision</span>
                 <span class="cost-usage">${formatGraphMax(waterForecast, "m³")}</span>
               </span>
               <span class="cost-price-row">
-                <span class="cost-detail">${formatCurrency(utilityRates.waterFixedPricePerMonth)} + ${formatCurrency(waterForecastVariableCost)}</span>
                 <span class="cost-value">${formatTotalCost(waterForecastTotal, utilityRates.waterMonthlyPaymentPrice)}</span>
               </span>
             </div>`
@@ -1527,11 +1519,10 @@
         const electricityForecastCard = electricityForecast
           ? `<div class="cost-item electricity forecast">
               <span class="cost-heading">
-                <span class="cost-label">⚡ Prévision</span>
+                <span class="cost-label">Prévision</span>
                 <span class="cost-usage">${formatGraphMax(electricityForecast, "kWh")}</span>
               </span>
               <span class="cost-price-row">
-                <span class="cost-detail">${formatCurrency(utilityRates.electricityFixedPricePerMonth)} + ${formatCurrency(electricityForecastVariableCost)}</span>
                 <span class="cost-value">${formatTotalCost(electricityForecastTotal, utilityRates.electricityMonthlyPaymentPrice)}</span>
               </span>
             </div>`
@@ -1540,21 +1531,19 @@
         graphCostSummary.innerHTML = `
           <div class="cost-item water">
             <span class="cost-heading">
-              <span class="cost-label">💧 Eau</span>
+              <span class="cost-label">💧</span>
               <span class="cost-usage">${formatGraphMax(waterConsumption, "m³")}</span>
             </span>
             <span class="cost-price-row">
-              <span class="cost-detail">${formatCurrency(utilityRates.waterFixedPricePerMonth)} + ${formatCurrency(waterVariableCost)}</span>
               <span class="cost-value">${formatTotalCost(waterTotal, utilityRates.waterMonthlyPaymentPrice)}</span>
             </span>
           </div>
           <div class="cost-item electricity">
             <span class="cost-heading">
-              <span class="cost-label">⚡ Électricité</span>
+              <span class="cost-label">⚡</span>
               <span class="cost-usage">${formatGraphMax(electricityConsumption, "kWh")}</span>
             </span>
             <span class="cost-price-row">
-              <span class="cost-detail">${formatCurrency(utilityRates.electricityFixedPricePerMonth)} + ${formatCurrency(electricityVariableCost)}</span>
               <span class="cost-value">${formatTotalCost(electricityTotal, utilityRates.electricityMonthlyPaymentPrice)}</span>
             </span>
           </div>
