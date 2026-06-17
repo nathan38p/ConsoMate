@@ -25,6 +25,12 @@ create table if not exists public.profiles (
   id uuid primary key references auth.users(id) on delete cascade,
   email text not null unique,
   first_name text,
+  water_price_per_m3 numeric not null default 3.0833,
+  electricity_price_per_kwh numeric not null default 0.1940,
+  water_fixed_price_per_month numeric not null default (20.20 / 6),
+  electricity_fixed_price_per_month numeric not null default (187.82 / 12),
+  water_monthly_payment_price numeric not null default 0,
+  electricity_monthly_payment_price numeric not null default 0,
   created_at timestamptz not null default now()
 );
 
@@ -62,6 +68,24 @@ add column if not exists value_hc numeric;
 
 alter table public.profiles
 add column if not exists first_name text;
+
+alter table public.profiles
+add column if not exists water_price_per_m3 numeric not null default 3.0833;
+
+alter table public.profiles
+add column if not exists electricity_price_per_kwh numeric not null default 0.1940;
+
+alter table public.profiles
+add column if not exists water_fixed_price_per_month numeric not null default (20.20 / 6);
+
+alter table public.profiles
+add column if not exists electricity_fixed_price_per_month numeric not null default (187.82 / 12);
+
+alter table public.profiles
+add column if not exists water_monthly_payment_price numeric not null default 0;
+
+alter table public.profiles
+add column if not exists electricity_monthly_payment_price numeric not null default 0;
 
 update public.readings
 set reading_datetime_local = reading_date at time zone 'Europe/Paris'
@@ -168,9 +192,9 @@ using (auth.uid() = owner_id or auth.uid() = mate_id);
 
 1. Ouvrez la page dans votre navigateur.
 2. Créez un compte ou connectez-vous.
-3. Ouvrez les réglages pour renseigner votre prénom.
+3. Ouvrez les réglages pour renseigner votre prénom et vos tarifs.
 4. Ajoutez ensuite vos relevés d'eau ou d'électricité.
 5. Ouvrez les réglages pour ajouter un mate par e-mail et voir les relevés partagés.
 6. En cas d'oubli du mot de passe, utilisez le lien de réinitialisation sur l'écran de connexion.
 
-Le graphe peut afficher les consommations en euros avec les tarifs `3,0833 €/m³` pour l'eau et `0,1940 €/kWh` pour l'électricité. Le résumé mensuel ajoute aussi les parts fixes : `20,20 €` par semestre pour l'eau et `187,82 €` par an pour l'électricité.
+Le résumé mensuel utilise les tarifs enregistrés dans les réglages. Par défaut, ConsoMate initialise `3,0833 €/m³` pour l'eau, `0,1940 €/kWh` pour l'électricité, `20,20 €` par semestre pour l'abonnement eau et `187,82 €` par an pour l'abonnement électricité. Les mensualisations eau et électricité valent `0 €` par défaut, ce qui désactive l'alerte de dépassement.

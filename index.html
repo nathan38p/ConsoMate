@@ -15,14 +15,14 @@
     <style>
       :root {
         --bg: #000000;
-        --card: #18181b;
+        --card: #2c2c2c;
         --text: #ffffff;
         --muted: #cbd5e1;
         --accent: #2563eb;
         --accent-dark: #1d4ed8;
         --danger: #dc2626;
         --success: #15803d;
-        --border: #3f3f46;
+        --border: #000000;
       }
 
       * {
@@ -110,7 +110,7 @@
         padding: 10px 12px;
         border: 1px solid var(--border);
         border-radius: 10px;
-        background: #2a2a2a;
+        background: #2e2e2e;
         color: var(--text);
       }
 
@@ -154,7 +154,7 @@
 
       .user-menu-btn {
         align-items: center;
-        background: #2a2a2a;
+        background: #2e2e2e;
         border: 1px solid var(--border);
         color: var(--text);
         display: flex;
@@ -197,7 +197,7 @@
       }
 
       .user-menu-popover button:hover {
-        background: #2a2a2a;
+        background: #2e2e2e;
       }
 
       .user-menu-popover button.danger-action {
@@ -214,6 +214,12 @@
 
       button:hover {
         transform: translateY(-1px);
+      }
+
+      button:disabled {
+        cursor: not-allowed;
+        opacity: 0.45;
+        transform: none;
       }
 
       button.primary {
@@ -295,12 +301,12 @@
       }
 
       .type-option[data-reading-type="water"] {
-        background: #dbeafe;
+        background: #7cb5ff;
         color: #1e40af;
       }
 
       .type-option[data-reading-type="electricity"] {
-        background: #fef3c7;
+        background: #ffea96;
         color: #92400e;
       }
 
@@ -395,7 +401,7 @@
       .reading-item {
         align-items: center;
         border: 1px solid var(--border);
-        background: #242424;
+        background: #282828;
         border-radius: 10px;
         display: flex;
         gap: 12px;
@@ -429,7 +435,7 @@
       }
 
       .reading-date {
-        color: var(--muted);
+        color: #64748b;
         font-size: 0.9rem;
       }
 
@@ -531,30 +537,42 @@
         border-style: dashed;
       }
 
+      .cost-heading {
+        align-items: baseline;
+        display: flex;
+        gap: 8px;
+        justify-content: space-between;
+      }
+
       .cost-label {
         font-size: 0.82rem;
         font-weight: 800;
       }
 
-      .cost-value {
+      .cost-price-row {
         align-items: baseline;
         color: var(--text);
         display: flex;
-        font-size: 1.25rem;
-        font-weight: 900;
-        justify-content: space-between;
         gap: 10px;
+        justify-content: space-between;
+      }
+
+      .cost-value {
+        color: #000000;
+        font-size: 1.08rem;
+        font-weight: 900;
+        white-space: nowrap;
       }
 
       .cost-usage {
-        color: var(--muted);
+        color: inherit;
         font-size: 0.85rem;
         font-weight: 800;
         white-space: nowrap;
       }
 
       .cost-detail {
-        color: var(--muted);
+        color: #64748b;
         font-size: 0.82rem;
         line-height: 1.35;
       }
@@ -600,11 +618,14 @@
           padding: 10px;
         }
 
-        .cost-value {
+        .cost-price-row {
           align-items: baseline;
           flex-direction: row;
-          font-size: 1.05rem;
           gap: 8px;
+        }
+
+        .cost-value {
+          font-size: 1rem;
         }
 
         .cost-usage,
@@ -755,10 +776,14 @@
       const DEFAULT_SUPABASE_URL = "https://jjafxjyrnysujgwwtkte.supabase.co";
       const DEFAULT_SUPABASE_KEY = "sb_publishable_KZqc80abiojlxzIe5cnJew_-L2IPfvX";
       const LAST_EMAIL_KEY = "consomate-last-email";
-      const WATER_PRICE_PER_M3 = 3.0833;
-      const ELECTRICITY_PRICE_PER_KWH = 0.1940;
-      const WATER_FIXED_PRICE_PER_MONTH = 20.20 / 6;
-      const ELECTRICITY_FIXED_PRICE_PER_MONTH = 187.82 / 12;
+      const DEFAULT_UTILITY_RATES = {
+        waterPricePerM3: 3.0833,
+        electricityPricePerKwh: 0.1940,
+        waterFixedPricePerMonth: 20.20 / 6,
+        electricityFixedPricePerMonth: 187.82 / 12,
+        waterMonthlyPaymentPrice: 0,
+        electricityMonthlyPaymentPrice: 0
+      };
 
       let supabaseClient = null;
       let currentSession = null;
@@ -768,6 +793,7 @@
       let graphReadings = [];
       let sharedUserIds = [];
       let profileLabelsById = {};
+      let utilityRates = { ...DEFAULT_UTILITY_RATES };
 
       const authForm = document.getElementById("auth-form");
       const authTitle = document.getElementById("auth-title");
@@ -940,8 +966,35 @@
 
       async function refreshSharedData() {
         await ensureCurrentProfile();
+        await loadUtilityRates();
         await loadMates();
         await loadReadings();
+      }
+
+      async function loadUtilityRates() {
+        utilityRates = { ...DEFAULT_UTILITY_RATES };
+        if (!supabaseClient || !currentSession) {
+          return;
+        }
+
+        const { data, error } = await supabaseClient
+          .from("profiles")
+          .select("water_price_per_m3,electricity_price_per_kwh,water_fixed_price_per_month,electricity_fixed_price_per_month,water_monthly_payment_price,electricity_monthly_payment_price")
+          .eq("id", currentSession.user.id)
+          .maybeSingle();
+
+        if (error || !data) {
+          return;
+        }
+
+        utilityRates = {
+          waterPricePerM3: Number.isFinite(Number(data.water_price_per_m3)) ? Number(data.water_price_per_m3) : DEFAULT_UTILITY_RATES.waterPricePerM3,
+          electricityPricePerKwh: Number.isFinite(Number(data.electricity_price_per_kwh)) ? Number(data.electricity_price_per_kwh) : DEFAULT_UTILITY_RATES.electricityPricePerKwh,
+          waterFixedPricePerMonth: Number.isFinite(Number(data.water_fixed_price_per_month)) ? Number(data.water_fixed_price_per_month) : DEFAULT_UTILITY_RATES.waterFixedPricePerMonth,
+          electricityFixedPricePerMonth: Number.isFinite(Number(data.electricity_fixed_price_per_month)) ? Number(data.electricity_fixed_price_per_month) : DEFAULT_UTILITY_RATES.electricityFixedPricePerMonth,
+          waterMonthlyPaymentPrice: Number.isFinite(Number(data.water_monthly_payment_price)) ? Number(data.water_monthly_payment_price) : DEFAULT_UTILITY_RATES.waterMonthlyPaymentPrice,
+          electricityMonthlyPaymentPrice: Number.isFinite(Number(data.electricity_monthly_payment_price)) ? Number(data.electricity_monthly_payment_price) : DEFAULT_UTILITY_RATES.electricityMonthlyPaymentPrice
+        };
       }
 
       async function handleAuthSubmit(event) {
@@ -1125,8 +1178,53 @@
         return { start, end };
       }
 
+      function getMonthKey(date) {
+        return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+      }
+
+      function getReadingMonthKey(reading) {
+        const readingDate = new Date(getReadingDatetime(reading));
+        if (Number.isNaN(readingDate.getTime())) {
+          return "";
+        }
+
+        return getMonthKey(readingDate);
+      }
+
+      function getAvailableGraphMonthKeys(readings) {
+        return [...new Set(readings.map(getReadingMonthKey).filter(Boolean))].sort();
+      }
+
+      function setSelectedGraphMonthFromKey(monthKey) {
+        const [year, month] = monthKey.split("-").map(Number);
+        selectedGraphMonth = new Date(year, month - 1, 1);
+      }
+
+      function ensureSelectedGraphMonthHasData(readings) {
+        const availableMonthKeys = getAvailableGraphMonthKeys(readings);
+        if (availableMonthKeys.length === 0) {
+          return availableMonthKeys;
+        }
+
+        const selectedMonthKey = getMonthKey(selectedGraphMonth);
+        if (!availableMonthKeys.includes(selectedMonthKey)) {
+          setSelectedGraphMonthFromKey(availableMonthKeys[availableMonthKeys.length - 1]);
+        }
+
+        return availableMonthKeys;
+      }
+
       function changeGraphMonth(offset) {
-        selectedGraphMonth = new Date(selectedGraphMonth.getFullYear(), selectedGraphMonth.getMonth() + offset, 1);
+        const availableMonthKeys = getAvailableGraphMonthKeys(graphReadings);
+        const selectedMonthKey = getMonthKey(selectedGraphMonth);
+        const selectedMonthIndex = availableMonthKeys.indexOf(selectedMonthKey);
+        const nextMonthKey = availableMonthKeys[selectedMonthIndex + offset];
+
+        if (!nextMonthKey) {
+          return;
+        }
+
+        setSelectedGraphMonthFromKey(nextMonthKey);
         renderGraph(graphReadings);
       }
 
@@ -1400,52 +1498,65 @@
         return series[series.length - 1].value;
       }
 
+      function formatTotalCost(value, monthlyPaymentPrice) {
+        const exceedsMonthlyPayment = monthlyPaymentPrice > 0 && value > monthlyPaymentPrice;
+        return `${exceedsMonthlyPayment ? "⚠️ " : ""}${formatCurrency(value)}`;
+      }
+
       function renderCostSummary(waterConsumption, electricityConsumption, waterForecast, electricityForecast) {
-        const waterVariableCost = waterConsumption * WATER_PRICE_PER_M3;
-        const electricityVariableCost = electricityConsumption * ELECTRICITY_PRICE_PER_KWH;
-        const waterTotal = waterVariableCost + WATER_FIXED_PRICE_PER_MONTH;
-        const electricityTotal = electricityVariableCost + ELECTRICITY_FIXED_PRICE_PER_MONTH;
-        const waterForecastVariableCost = waterForecast * WATER_PRICE_PER_M3;
-        const electricityForecastVariableCost = electricityForecast * ELECTRICITY_PRICE_PER_KWH;
-        const waterForecastTotal = waterForecast ? waterForecastVariableCost + WATER_FIXED_PRICE_PER_MONTH : 0;
-        const electricityForecastTotal = electricityForecast ? electricityForecastVariableCost + ELECTRICITY_FIXED_PRICE_PER_MONTH : 0;
+        const waterVariableCost = waterConsumption * utilityRates.waterPricePerM3;
+        const electricityVariableCost = electricityConsumption * utilityRates.electricityPricePerKwh;
+        const waterTotal = waterVariableCost + utilityRates.waterFixedPricePerMonth;
+        const electricityTotal = electricityVariableCost + utilityRates.electricityFixedPricePerMonth;
+        const waterForecastVariableCost = waterForecast * utilityRates.waterPricePerM3;
+        const electricityForecastVariableCost = electricityForecast * utilityRates.electricityPricePerKwh;
+        const waterForecastTotal = waterForecast ? waterForecastVariableCost + utilityRates.waterFixedPricePerMonth : 0;
+        const electricityForecastTotal = electricityForecast ? electricityForecastVariableCost + utilityRates.electricityFixedPricePerMonth : 0;
         const waterForecastCard = waterForecast
           ? `<div class="cost-item water forecast">
-              <span class="cost-label">💧 Prévision</span>
-              <span class="cost-value">
-                <span>${formatCurrency(waterForecastTotal)}</span>
+              <span class="cost-heading">
+                <span class="cost-label">💧 Prévision</span>
                 <span class="cost-usage">${formatGraphMax(waterForecast, "m³")}</span>
               </span>
-              <span class="cost-detail">${formatCurrency(WATER_FIXED_PRICE_PER_MONTH)} + ${formatCurrency(waterForecastVariableCost)}</span>
+              <span class="cost-price-row">
+                <span class="cost-detail">${formatCurrency(utilityRates.waterFixedPricePerMonth)} + ${formatCurrency(waterForecastVariableCost)}</span>
+                <span class="cost-value">${formatTotalCost(waterForecastTotal, utilityRates.waterMonthlyPaymentPrice)}</span>
+              </span>
             </div>`
           : "";
         const electricityForecastCard = electricityForecast
           ? `<div class="cost-item electricity forecast">
-              <span class="cost-label">⚡ Prévision</span>
-              <span class="cost-value">
-                <span>${formatCurrency(electricityForecastTotal)}</span>
+              <span class="cost-heading">
+                <span class="cost-label">⚡ Prévision</span>
                 <span class="cost-usage">${formatGraphMax(electricityForecast, "kWh")}</span>
               </span>
-              <span class="cost-detail">${formatCurrency(ELECTRICITY_FIXED_PRICE_PER_MONTH)} + ${formatCurrency(electricityForecastVariableCost)}</span>
+              <span class="cost-price-row">
+                <span class="cost-detail">${formatCurrency(utilityRates.electricityFixedPricePerMonth)} + ${formatCurrency(electricityForecastVariableCost)}</span>
+                <span class="cost-value">${formatTotalCost(electricityForecastTotal, utilityRates.electricityMonthlyPaymentPrice)}</span>
+              </span>
             </div>`
           : "";
 
         graphCostSummary.innerHTML = `
           <div class="cost-item water">
-            <span class="cost-label">💧 Eau</span>
-            <span class="cost-value">
-              <span>${formatCurrency(waterTotal)}</span>
+            <span class="cost-heading">
+              <span class="cost-label">💧 Eau</span>
               <span class="cost-usage">${formatGraphMax(waterConsumption, "m³")}</span>
             </span>
-            <span class="cost-detail">${formatCurrency(WATER_FIXED_PRICE_PER_MONTH)} + ${formatCurrency(waterVariableCost)}</span>
+            <span class="cost-price-row">
+              <span class="cost-detail">${formatCurrency(utilityRates.waterFixedPricePerMonth)} + ${formatCurrency(waterVariableCost)}</span>
+              <span class="cost-value">${formatTotalCost(waterTotal, utilityRates.waterMonthlyPaymentPrice)}</span>
+            </span>
           </div>
           <div class="cost-item electricity">
-            <span class="cost-label">⚡ Électricité</span>
-            <span class="cost-value">
-              <span>${formatCurrency(electricityTotal)}</span>
+            <span class="cost-heading">
+              <span class="cost-label">⚡ Électricité</span>
               <span class="cost-usage">${formatGraphMax(electricityConsumption, "kWh")}</span>
             </span>
-            <span class="cost-detail">${formatCurrency(ELECTRICITY_FIXED_PRICE_PER_MONTH)} + ${formatCurrency(electricityVariableCost)}</span>
+            <span class="cost-price-row">
+              <span class="cost-detail">${formatCurrency(utilityRates.electricityFixedPricePerMonth)} + ${formatCurrency(electricityVariableCost)}</span>
+              <span class="cost-value">${formatTotalCost(electricityTotal, utilityRates.electricityMonthlyPaymentPrice)}</span>
+            </span>
           </div>
           ${waterForecastCard}
           ${electricityForecastCard}
@@ -1463,8 +1574,13 @@
 
       function renderGraph(readings = []) {
         graphReadings = readings;
+        const availableMonthKeys = ensureSelectedGraphMonthHasData(readings);
+        const selectedMonthKey = getMonthKey(selectedGraphMonth);
+        const selectedMonthIndex = availableMonthKeys.indexOf(selectedMonthKey);
         const { start, end } = getMonthBounds(selectedGraphMonth);
         graphMonthLabel.textContent = formatMonthLabel(start);
+        prevMonthBtn.disabled = selectedMonthIndex <= 0;
+        nextMonthBtn.disabled = selectedMonthIndex === -1 || selectedMonthIndex >= availableMonthKeys.length - 1;
 
         const waterData = buildConsumptionData(readings, "water", start, end);
         const electricityData = buildConsumptionData(readings, "electricity", start, end);

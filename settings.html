@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#dbeafe" />
+    <meta name="theme-color" content="#000000" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="application-name" content="ConsoMate" />
@@ -14,15 +14,15 @@
     <title>ConsoMate</title>
     <style>
       :root {
-        --bg: #dbeafe;
-        --card: #ffffff;
-        --text: #172033;
-        --muted: #64748b;
+        --bg: #000000;
+        --card: #2c2c2c;
+        --text: #ffffff;
+        --muted: #cbd5e1;
         --accent: #2563eb;
         --accent-dark: #1d4ed8;
         --danger: #dc2626;
         --success: #15803d;
-        --border: #e2e8f0;
+        --border: #000000;
       }
 
       * {
@@ -81,6 +81,11 @@
         font-size: 1.1rem;
       }
 
+      .settings-title {
+        flex: 1;
+        margin-bottom: 16px;
+      }
+
       form {
         display: grid;
         gap: 12px;
@@ -90,6 +95,7 @@
         display: grid;
         gap: 6px;
         font-weight: 600;
+        color: var(--text);
       }
 
       input,
@@ -102,7 +108,7 @@
         padding: 10px 12px;
         border: 1px solid var(--border);
         border-radius: 10px;
-        background: #fcfdff;
+        background: #2e2e2e;
         color: var(--text);
       }
 
@@ -128,7 +134,7 @@
       }
 
       button.secondary {
-        background: #e2e8f0;
+        background: #2e2e2e;
         color: var(--text);
       }
 
@@ -138,6 +144,10 @@
         display: flex;
         flex-wrap: wrap;
         gap: 10px;
+      }
+
+      .toolbar {
+        margin-bottom: 4px;
       }
 
       .notification-row {
@@ -151,6 +161,12 @@
       .notification-row .hint {
         flex: 1 1 260px;
         margin: 0;
+      }
+
+      .rate-grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
       .message,
@@ -179,7 +195,7 @@
       }
 
       .mate-item {
-        background: #f8fafc;
+        background: #282828;
         border: 1px solid var(--border);
         border-radius: 12px;
         padding: 10px 12px;
@@ -204,7 +220,7 @@
 
       .user-menu-btn {
         align-items: center;
-        background: var(--card);
+        background: #2e2e2e;
         border: 1px solid var(--border);
         color: var(--text);
         display: flex;
@@ -247,7 +263,13 @@
       }
 
       .user-menu-popover button:hover {
-        background: #f1f5f9;
+        background: #2e2e2e;
+      }
+
+      hr {
+        border: 0;
+        border-top: 1px solid #3a3a3a;
+        margin: 20px 0;
       }
 
       .user-menu-popover button.danger-action {
@@ -261,6 +283,10 @@
 
         .card {
           padding: 18px;
+        }
+
+        .rate-grid {
+          grid-template-columns: 1fr;
         }
       }
     </style>
@@ -284,7 +310,7 @@
 
       <section class="card" id="settings-card">
         <div class="toolbar">
-          <h2 style="margin: 0; flex: 1">Réglages</h2>
+          <h2 class="settings-title">Réglages</h2>
         </div>
 
         <form id="profile-form">
@@ -296,6 +322,42 @@
             <button type="submit" class="primary">Enregistrer le prénom</button>
           </div>
         </form>
+
+        <hr />
+
+        <h2>Tarifs</h2>
+        <form id="rates-form">
+          <div class="rate-grid">
+            <label>
+              Abonnement eau mensuel
+              <input id="water-fixed-price" type="number" inputmode="decimal" min="0" step="0.01" required />
+            </label>
+            <label>
+              Prix du m³
+              <input id="water-price-m3" type="number" inputmode="decimal" min="0" step="0.0001" required />
+            </label>
+            <label>
+              Abonnement électricité mensuel
+              <input id="electricity-fixed-price" type="number" inputmode="decimal" min="0" step="0.01" required />
+            </label>
+            <label>
+              Prix du kWh
+              <input id="electricity-price-kwh" type="number" inputmode="decimal" min="0" step="0.0001" required />
+            </label>
+            <label>
+              Mensualisation eau
+              <input id="water-monthly-payment-price" type="number" inputmode="decimal" min="0" step="0.01" required />
+            </label>
+            <label>
+              Mensualisation électricité
+              <input id="electricity-monthly-payment-price" type="number" inputmode="decimal" min="0" step="0.01" required />
+            </label>
+          </div>
+          <div class="actions">
+            <button type="submit" class="primary">Enregistrer les tarifs</button>
+          </div>
+        </form>
+        <p id="rates-message" class="message"></p>
 
         <hr />
 
@@ -331,6 +393,14 @@
       const DEFAULT_SUPABASE_KEY = "sb_publishable_KZqc80abiojlxzIe5cnJew_-L2IPfvX";
       const VAPID_PUBLIC_KEY = "BBuRxmWKL_hk2IZ0eYwcSSm-s_-XMXw8Cv4lamzH3585cEXRURRAjj5b_pe9hwNLIfxSrUN1XeYRB-typnBULGE";
       const APP_VERSION = "2026.06.17.1";
+      const DEFAULT_UTILITY_RATES = {
+        waterPricePerM3: 3.0833,
+        electricityPricePerKwh: 0.1940,
+        waterFixedPricePerMonth: 20.20 / 6,
+        electricityFixedPricePerMonth: 187.82 / 12,
+        waterMonthlyPaymentPrice: 0,
+        electricityMonthlyPaymentPrice: 0
+      };
 
       let supabaseClient = null;
       let currentSession = null;
@@ -341,9 +411,17 @@
       const logoutBtn = document.getElementById("logout-btn");
       const profileForm = document.getElementById("profile-form");
       const profileFirstName = document.getElementById("profile-first-name");
+      const ratesForm = document.getElementById("rates-form");
+      const waterFixedPrice = document.getElementById("water-fixed-price");
+      const waterPriceM3 = document.getElementById("water-price-m3");
+      const electricityFixedPrice = document.getElementById("electricity-fixed-price");
+      const electricityPriceKwh = document.getElementById("electricity-price-kwh");
+      const waterMonthlyPaymentPrice = document.getElementById("water-monthly-payment-price");
+      const electricityMonthlyPaymentPrice = document.getElementById("electricity-monthly-payment-price");
       const mateForm = document.getElementById("mate-form");
       const mateEmail = document.getElementById("mate-email");
       const settingsMessage = document.getElementById("settings-message");
+      const ratesMessage = document.getElementById("rates-message");
       const matesList = document.getElementById("mates-list");
       const enablePushBtn = document.getElementById("enable-push-btn");
       const pushMessage = document.getElementById("push-message");
@@ -371,6 +449,12 @@
           .replaceAll(">", "&gt;")
           .replaceAll('"', "&quot;")
           .replaceAll("'", "&#039;");
+      }
+
+      function formatRateInputValue(value, fallback, fractionDigits) {
+        const numberValue = value === null || value === undefined || value === "" ? NaN : Number(value);
+        const resolvedValue = Number.isFinite(numberValue) ? numberValue : fallback;
+        return resolvedValue.toFixed(fractionDigits);
       }
 
       function urlBase64ToUint8Array(base64String) {
@@ -447,14 +531,30 @@
       }
 
       async function loadCurrentProfile() {
+        waterFixedPrice.value = formatRateInputValue(null, DEFAULT_UTILITY_RATES.waterFixedPricePerMonth, 2);
+        waterPriceM3.value = formatRateInputValue(null, DEFAULT_UTILITY_RATES.waterPricePerM3, 4);
+        electricityFixedPrice.value = formatRateInputValue(null, DEFAULT_UTILITY_RATES.electricityFixedPricePerMonth, 2);
+        electricityPriceKwh.value = formatRateInputValue(null, DEFAULT_UTILITY_RATES.electricityPricePerKwh, 4);
+        waterMonthlyPaymentPrice.value = formatRateInputValue(null, DEFAULT_UTILITY_RATES.waterMonthlyPaymentPrice, 2);
+        electricityMonthlyPaymentPrice.value = formatRateInputValue(null, DEFAULT_UTILITY_RATES.electricityMonthlyPaymentPrice, 2);
+
         const { data, error } = await supabaseClient
           .from("profiles")
-          .select("first_name")
+          .select("first_name,water_price_per_m3,electricity_price_per_kwh,water_fixed_price_per_month,electricity_fixed_price_per_month,water_monthly_payment_price,electricity_monthly_payment_price")
           .eq("id", currentSession.user.id)
           .maybeSingle();
 
         if (!error && data?.first_name) {
           profileFirstName.value = data.first_name;
+        }
+
+        if (!error && data) {
+          waterFixedPrice.value = formatRateInputValue(data.water_fixed_price_per_month, DEFAULT_UTILITY_RATES.waterFixedPricePerMonth, 2);
+          waterPriceM3.value = formatRateInputValue(data.water_price_per_m3, DEFAULT_UTILITY_RATES.waterPricePerM3, 4);
+          electricityFixedPrice.value = formatRateInputValue(data.electricity_fixed_price_per_month, DEFAULT_UTILITY_RATES.electricityFixedPricePerMonth, 2);
+          electricityPriceKwh.value = formatRateInputValue(data.electricity_price_per_kwh, DEFAULT_UTILITY_RATES.electricityPricePerKwh, 4);
+          waterMonthlyPaymentPrice.value = formatRateInputValue(data.water_monthly_payment_price, DEFAULT_UTILITY_RATES.waterMonthlyPaymentPrice, 2);
+          electricityMonthlyPaymentPrice.value = formatRateInputValue(data.electricity_monthly_payment_price, DEFAULT_UTILITY_RATES.electricityMonthlyPaymentPrice, 2);
         }
       }
 
@@ -479,6 +579,44 @@
 
         setMessage(settingsMessage, "Prénom enregistré.", "success");
         await loadMates();
+      }
+
+      async function handleRatesSubmit(event) {
+        event.preventDefault();
+        if (!supabaseClient || !currentSession) {
+          setMessage(ratesMessage, "Connectez-vous pour enregistrer les tarifs.", "error");
+          return;
+        }
+
+        const waterFixedPriceValue = Number(waterFixedPrice.value);
+        const waterPriceM3Value = Number(waterPriceM3.value);
+        const electricityFixedPriceValue = Number(electricityFixedPrice.value);
+        const electricityPriceKwhValue = Number(electricityPriceKwh.value);
+        const waterMonthlyPaymentPriceValue = Number(waterMonthlyPaymentPrice.value);
+        const electricityMonthlyPaymentPriceValue = Number(electricityMonthlyPaymentPrice.value);
+        const values = [waterFixedPriceValue, waterPriceM3Value, electricityFixedPriceValue, electricityPriceKwhValue, waterMonthlyPaymentPriceValue, electricityMonthlyPaymentPriceValue];
+        if (values.some((value) => !Number.isFinite(value) || value < 0)) {
+          setMessage(ratesMessage, "Saisissez uniquement des prix positifs.", "error");
+          return;
+        }
+
+        const { error } = await supabaseClient.from("profiles").upsert({
+          id: currentSession.user.id,
+          email: currentSession.user.email.toLowerCase(),
+          water_fixed_price_per_month: waterFixedPriceValue,
+          water_price_per_m3: waterPriceM3Value,
+          electricity_fixed_price_per_month: electricityFixedPriceValue,
+          electricity_price_per_kwh: electricityPriceKwhValue,
+          water_monthly_payment_price: waterMonthlyPaymentPriceValue,
+          electricity_monthly_payment_price: electricityMonthlyPaymentPriceValue
+        });
+
+        if (error) {
+          setMessage(ratesMessage, `Impossible d'enregistrer les tarifs : ${error.message}`, "error");
+          return;
+        }
+
+        setMessage(ratesMessage, "Tarifs enregistrés.", "success");
       }
 
       async function handleMateSubmit(event) {
@@ -654,6 +792,7 @@
         });
         logoutBtn.addEventListener("click", handleLogout);
         profileForm.addEventListener("submit", handleProfileSubmit);
+        ratesForm.addEventListener("submit", handleRatesSubmit);
         mateForm.addEventListener("submit", handleMateSubmit);
         enablePushBtn.addEventListener("click", handleEnablePush);
       }
