@@ -33,6 +33,8 @@
       body {
         background: var(--bg);
         min-height: 100%;
+        max-width: 100%;
+        overflow-x: hidden;
       }
 
       body {
@@ -47,6 +49,7 @@
         max-width: 860px;
         margin: 0 auto;
         padding: 32px 16px 60px;
+        width: 100%;
       }
 
       .hero {
@@ -576,6 +579,7 @@
       .graph-frame svg {
         display: block;
         height: auto;
+        max-width: 100%;
         width: 100%;
       }
 
@@ -621,6 +625,7 @@
         display: flex;
         gap: 8px;
         justify-content: space-between;
+        min-width: 0;
       }
 
       .cost-label {
@@ -647,6 +652,9 @@
         color: inherit;
         font-size: 0.85rem;
         font-weight: 800;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
         white-space: nowrap;
       }
 
@@ -720,7 +728,7 @@
   <body>
     <main class="container">
       <header class="hero">
-        <h1><a class="site-title" href="index.html">ConsoMate</a></h1>
+        <h1><a class="site-title" href="index.html?v=2">ConsoMate</a></h1>
         <div id="top-actions" class="top-actions hidden">
           <button type="button" id="add-reading-btn" class="add-reading-btn" aria-label="Ajouter un relevé">+</button>
           <div id="user-menu" class="user-menu">
