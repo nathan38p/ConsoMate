@@ -569,7 +569,7 @@
       }
 
       .graph-frame {
-        min-height: 260px;
+        min-height: 310px;
         overflow: hidden;
       }
 
@@ -685,7 +685,7 @@
         }
 
         .graph-frame svg {
-          max-height: 190px;
+          max-height: 240px;
         }
 
         .cost-summary {
@@ -1224,7 +1224,7 @@
       }
 
       function toggleSettings() {
-        window.location.href = "settings.html";
+        window.location.href = "settings.html?v=2";
       }
 
       function getReadingUnit(type) {
@@ -1583,6 +1583,10 @@
           return `0 ${unit}`;
         }
 
+        if (unit === "kWh") {
+          return `${Math.round(value)} ${unit}`;
+        }
+
         const precision = value < 1 ? 3 : 1;
         return `${value.toFixed(precision)} ${unit}`;
       }
@@ -1609,13 +1613,13 @@
         return `${exceedsMonthlyPayment ? "⚠️ " : ""}${formatCurrency(value)}`;
       }
 
-      function formatHphcProfitability(baseTotal, hphcTotal) {
+      function formatHphcSavings(baseTotal, hphcTotal) {
         const difference = baseTotal - hphcTotal;
         if (Math.abs(difference) < 0.01) {
-          return "Équivalent au tarif actuel";
+          return "0,00 €";
         }
 
-        return difference > 0 ? `Rentable : ${formatCurrency(difference)} gagnés` : `Plus cher : ${formatCurrency(Math.abs(difference))} de plus`;
+        return `${difference > 0 ? "-" : "+"}${formatCurrency(Math.abs(difference))}`;
       }
 
       function getHphcTotalCost(hpConsumption, hcConsumption) {
@@ -1645,9 +1649,8 @@
               </span>
             </div>`
           : "";
-        const electricityForecastDetail = hphcSummary?.forecastTotal
-          ? `<span class="cost-detail">${formatHphcProfitability(electricityForecastVariableCost + utilityRates.electricityFixedPricePerMonth, hphcSummary.forecastTotal)}</span>
-             <span class="cost-detail">HP ${utilityRates.electricityHpPricePerKwh.toFixed(4)} €/kWh · HC ${utilityRates.electricityHcPricePerKwh.toFixed(4)} €/kWh · abo ${formatCurrency(utilityRates.electricityHphcFixedPricePerMonth)}/mois</span>`
+        const electricityForecastSavings = hphcSummary?.forecastTotal
+          ? `<span class="cost-detail">${formatHphcSavings(electricityForecastVariableCost + utilityRates.electricityFixedPricePerMonth, hphcSummary.forecastTotal)}</span>`
           : "";
         const electricityForecastCard = (hphcSummary?.forecastTotal || electricityForecast)
           ? `<div class="cost-item electricity forecast">
@@ -1657,8 +1660,8 @@
               </span>
               <span class="cost-price-row">
                 <span class="cost-value">${formatTotalCost(electricityForecastTotal, utilityRates.electricityMonthlyPaymentPrice)}</span>
+                ${electricityForecastSavings}
               </span>
-              ${electricityForecastDetail}
             </div>`
           : "";
         const hphcCard =
@@ -1670,9 +1673,8 @@
                 </span>
                 <span class="cost-price-row">
                   <span class="cost-value">${formatCurrency(hphcSummary.total)}</span>
+                  <span class="cost-detail">${formatHphcSavings(electricityTotal, hphcSummary.total)}</span>
                 </span>
-                <span class="cost-detail">${formatHphcProfitability(electricityTotal, hphcSummary.total)}</span>
-                <span class="cost-detail">HP ${utilityRates.electricityHpPricePerKwh.toFixed(4)} €/kWh · HC ${utilityRates.electricityHcPricePerKwh.toFixed(4)} €/kWh · abo ${formatCurrency(utilityRates.electricityHphcFixedPricePerMonth)}/mois</span>
               </div>`
             : "";
         const electricityCard = hphcCard || `<div class="cost-item electricity">
@@ -1760,8 +1762,9 @@
           left: 54,
           top: 18,
           width: 520,
-          height: 180
+          height: 230
         };
+        const svgHeight = chart.top + chart.height + 47;
         const graphEndDay = new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
         const waterPoints = createPolyline(waterSeries, waterMax, chart, graphEndDay);
         const electricityPoints = createPolyline(electricitySeries, electricityMax, chart, graphEndDay);
@@ -1771,7 +1774,7 @@
         const electricityMarkers = createPointCircles(electricitySeries, electricityMax, chart, graphEndDay, "#f59e0b");
         const electricityHpMarkers = createPointCircles(electricityHpSeries, displayedElectricityMax, chart, graphEndDay, "#ea580c");
         const electricityHcMarkers = createPointCircles(electricityHcSeries, displayedElectricityMax, chart, graphEndDay, "#fbbf24");
-        const xAxisLabels = createXAxisLabels(chart, graphEndDay);
+        const xAxisLabels = createXAxisLabels(chart, graphEndDay, chart.top + chart.height + 28);
         const electricitySeriesMarkup = isHphcModeEnabled
           ? `${
               electricityHpPoints
@@ -1788,7 +1791,7 @@
                 : ""
             }${electricityMarkers}`;
         graphFrame.innerHTML = `
-          <svg viewBox="0 0 650 245" role="img" aria-label="Consommation mensuelle">
+          <svg viewBox="0 0 650 ${svgHeight}" role="img" aria-label="Consommation mensuelle">
             <line x1="${chart.left}" y1="${chart.top}" x2="${chart.left}" y2="${chart.top + chart.height}" stroke="#cbd5e1" />
             <line x1="${chart.left + chart.width}" y1="${chart.top}" x2="${chart.left + chart.width}" y2="${chart.top + chart.height}" stroke="#cbd5e1" />
             <line x1="${chart.left}" y1="${chart.top + chart.height}" x2="${chart.left + chart.width}" y2="${chart.top + chart.height}" stroke="#cbd5e1" />
