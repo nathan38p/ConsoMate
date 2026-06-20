@@ -277,6 +277,10 @@
         color: var(--danger);
       }
 
+      .message:empty {
+        display: none;
+      }
+
       .hidden {
         display: none !important;
       }
@@ -487,6 +491,75 @@
         margin-bottom: 12px;
       }
 
+      .section-header {
+        align-items: center;
+        display: flex;
+        gap: 12px;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+
+      .section-header h2 {
+        margin: 0;
+      }
+
+      .hphc-toggle {
+        align-items: center;
+        color: var(--muted);
+        cursor: pointer;
+        display: inline-flex;
+        font-size: 0.8rem;
+        font-weight: 800;
+        gap: 8px;
+        user-select: none;
+      }
+
+      .hphc-toggle input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+      }
+
+      .hphc-switch {
+        background: #cbd5e1;
+        border-radius: 999px;
+        display: inline-flex;
+        height: 20px;
+        padding: 2px;
+        transition: background 0.2s ease;
+        width: 38px;
+      }
+
+      .hphc-switch::after {
+        background: #ffffff;
+        border-radius: 50%;
+        box-shadow: 0 1px 3px rgba(15, 23, 42, 0.24);
+        content: "";
+        height: 16px;
+        transition: transform 0.2s ease;
+        width: 16px;
+      }
+
+      .hphc-toggle input:checked ~ .hphc-switch {
+        background: #f59e0b;
+      }
+
+      .hphc-toggle input:checked ~ .hphc-switch::after {
+        transform: translateX(18px);
+      }
+
+      .hphc-label {
+        display: inline-flex;
+        gap: 2px;
+      }
+
+      .hphc-toggle input:checked ~ .hphc-label .hphc-label-hp {
+        color: #ea580c;
+      }
+
+      .hphc-toggle input:checked ~ .hphc-label .hphc-label-hc {
+        color: #fbbf24;
+      }
 
       .month-label {
         color: var(--text);
@@ -533,6 +606,12 @@
         color: #b45309;
       }
 
+      .cost-item.hphc {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #475569;
+      }
+
       .cost-item.forecast {
         border-style: dashed;
       }
@@ -569,6 +648,12 @@
         font-size: 0.85rem;
         font-weight: 800;
         white-space: nowrap;
+      }
+
+      .cost-detail {
+        color: #64748b;
+        font-size: 0.74rem;
+        font-weight: 700;
       }
 
       @media (max-width: 640px) {
@@ -747,6 +832,18 @@
       </section>
 
       <section class="card hidden" id="graph-card">
+        <div class="section-header">
+          <h2>Consommation</h2>
+          <label class="hphc-toggle" for="hphc-toggle">
+            <input id="hphc-toggle" type="checkbox" />
+            <span class="hphc-label">
+              <span class="hphc-label-hp">HP</span>
+              <span>/</span>
+              <span class="hphc-label-hc">HC</span>
+            </span>
+            <span class="hphc-switch" aria-hidden="true"></span>
+          </label>
+        </div>
         <div class="graph-toolbar">
           <button type="button" id="prev-month-btn" aria-label="Mois précédent">‹</button>
           <span id="graph-month-label" class="month-label"></span>
@@ -757,9 +854,10 @@
       </section>
 
       <section class="card hidden" id="readings-card">
+        <div class="section-header">
+          <h2>Derniers relevés</h2>
+        </div>
         <p id="reading-message" class="message"></p>
-
-        <h2>Derniers relevés</h2>
         <div id="readings-list" class="empty-state">Chargement…</div>
       </section>
     </main>
@@ -777,6 +875,11 @@
         waterMonthlyPaymentPrice: 0,
         electricityMonthlyPaymentPrice: 0
       };
+      const HPHC_RATES = {
+        hpPricePerKwh: 0.2065,
+        hcPricePerKwh: 0.1579,
+        fixedPricePerMonth: 189.96 / 12
+      };
 
       let supabaseClient = null;
       let currentSession = null;
@@ -787,6 +890,7 @@
       let sharedUserIds = [];
       let profileLabelsById = {};
       let utilityRates = { ...DEFAULT_UTILITY_RATES };
+      let isHphcModeEnabled = false;
 
       const authForm = document.getElementById("auth-form");
       const authTitle = document.getElementById("auth-title");
@@ -816,6 +920,7 @@
       const graphMonthLabel = document.getElementById("graph-month-label");
       const prevMonthBtn = document.getElementById("prev-month-btn");
       const nextMonthBtn = document.getElementById("next-month-btn");
+      const hphcToggle = document.getElementById("hphc-toggle");
       const authCard = document.getElementById("auth-card");
       const appCard = document.getElementById("app-card");
       const graphCard = document.getElementById("graph-card");
@@ -1279,6 +1384,11 @@
         return Number(reading.value);
       }
 
+      function getElectricityPartReadingValue(reading, part) {
+        const value = reading[part === "hp" ? "value_hp" : "value_hc"];
+        return value == null ? Number.NaN : Number(value);
+      }
+
       function resetMeterInputs() {
         meterDigitInputs.forEach((input) => {
           input.value = "";
@@ -1319,7 +1429,7 @@
         }
       }
 
-      function buildConsumptionData(readings, type, monthStart, monthEnd) {
+      function buildConsumptionData(readings, type, monthStart, monthEnd, getValue = getReadingTotalValue) {
         const dailyTotals = new Map();
         const groupedReadings = new Map();
         let firstReadingDate = null;
@@ -1354,8 +1464,8 @@
               return;
             }
 
-            const previousValue = getReadingTotalValue(sortedReadings[index - 1]);
-            const currentValue = getReadingTotalValue(reading);
+            const previousValue = getValue(sortedReadings[index - 1]);
+            const currentValue = getValue(reading);
             const consumption = currentValue - previousValue;
             if (Number.isNaN(consumption) || consumption < 0) {
               return;
@@ -1401,22 +1511,24 @@
         };
       }
 
-      function getForecastTotal(consumptionData, monthStart, monthEnd) {
-        const { series, firstReadingDate, latestConsumptionDate } = consumptionData;
-        if (series.length < 2 || !latestConsumptionDate) {
+      function getForecastTotal(consumptionData, monthStart) {
+        const { series } = consumptionData;
+        const actualPoints = series.filter((point) => point.value > 0).slice(-3);
+        if (actualPoints.length < 2) {
           return 0;
         }
 
         const daysInMonth = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0).getDate();
-        const lastPoint = series[series.length - 1];
+        const firstPoint = actualPoints[0];
+        const lastPoint = actualPoints[actualPoints.length - 1];
         if (lastPoint.day >= daysInMonth) {
           return 0;
         }
 
-        const averagingStart = firstReadingDate && firstReadingDate >= monthStart && firstReadingDate < monthEnd ? firstReadingDate : monthStart;
-        const elapsedDays = Math.max((latestConsumptionDate - averagingStart) / 86400000, 1);
-        const totalDays = Math.max((monthEnd - averagingStart) / 86400000, 1);
-        const projectedValue = (lastPoint.value / elapsedDays) * totalDays;
+        const elapsedDays = Math.max(lastPoint.day - firstPoint.day, 1);
+        const dailyAverage = (lastPoint.value - firstPoint.value) / elapsedDays;
+        const remainingDays = daysInMonth - lastPoint.day;
+        const projectedValue = lastPoint.value + dailyAverage * remainingDays;
 
         if (!Number.isFinite(projectedValue) || projectedValue <= lastPoint.value) {
           return 0;
@@ -1454,13 +1566,13 @@
           .join("");
       }
 
-      function createXAxisLabels(chart, daysInMonth) {
+      function createXAxisLabels(chart, daysInMonth, y = 226) {
         return [1, 10, 20, daysInMonth]
           .filter((day, index, days) => days.indexOf(day) === index && day <= daysInMonth)
           .map((day) => {
             const x = chart.left + ((day - 1) / Math.max(daysInMonth - 1, 1)) * chart.width;
             const anchor = day === 1 ? "start" : day === daysInMonth ? "end" : "middle";
-            return `<text x="${x.toFixed(1)}" y="226" fill="#64748b" font-size="12" text-anchor="${anchor}">${day}</text>`;
+            return `<text x="${x.toFixed(1)}" y="${y}" fill="#64748b" font-size="12" text-anchor="${anchor}">${day}</text>`;
           })
           .join("");
       }
@@ -1496,7 +1608,20 @@
         return `${exceedsMonthlyPayment ? "⚠️ " : ""}${formatCurrency(value)}`;
       }
 
-      function renderCostSummary(waterConsumption, electricityConsumption, waterForecast, electricityForecast) {
+      function formatHphcProfitability(baseTotal, hphcTotal) {
+        const difference = baseTotal - hphcTotal;
+        if (Math.abs(difference) < 0.01) {
+          return "Équivalent au tarif actuel";
+        }
+
+        return difference > 0 ? `Rentable : ${formatCurrency(difference)} gagnés` : `Plus cher : ${formatCurrency(Math.abs(difference))} de plus`;
+      }
+
+      function getHphcTotalCost(hpConsumption, hcConsumption) {
+        return hpConsumption * HPHC_RATES.hpPricePerKwh + hcConsumption * HPHC_RATES.hcPricePerKwh + HPHC_RATES.fixedPricePerMonth;
+      }
+
+      function renderCostSummary(waterConsumption, electricityConsumption, waterForecast, electricityForecast, hphcSummary = null) {
         const waterVariableCost = waterConsumption * utilityRates.waterPricePerM3;
         const electricityVariableCost = electricityConsumption * utilityRates.electricityPricePerKwh;
         const waterTotal = waterVariableCost + utilityRates.waterFixedPricePerMonth;
@@ -1504,7 +1629,10 @@
         const waterForecastVariableCost = waterForecast * utilityRates.waterPricePerM3;
         const electricityForecastVariableCost = electricityForecast * utilityRates.electricityPricePerKwh;
         const waterForecastTotal = waterForecast ? waterForecastVariableCost + utilityRates.waterFixedPricePerMonth : 0;
-        const electricityForecastTotal = electricityForecast ? electricityForecastVariableCost + utilityRates.electricityFixedPricePerMonth : 0;
+        const electricityForecastTotal = hphcSummary?.forecastTotal || (electricityForecast ? electricityForecastVariableCost + utilityRates.electricityFixedPricePerMonth : 0);
+        const electricityForecastUsage = hphcSummary?.forecastTotal
+          ? `HP ${formatGraphMax(hphcSummary.hpForecast, "kWh")} · HC ${formatGraphMax(hphcSummary.hcForecast, "kWh")}`
+          : formatGraphMax(electricityForecast, "kWh");
         const waterForecastCard = waterForecast
           ? `<div class="cost-item water forecast">
               <span class="cost-heading">
@@ -1516,17 +1644,45 @@
               </span>
             </div>`
           : "";
-        const electricityForecastCard = electricityForecast
+        const electricityForecastDetail = hphcSummary?.forecastTotal
+          ? `<span class="cost-detail">${formatHphcProfitability(electricityForecastVariableCost + utilityRates.electricityFixedPricePerMonth, hphcSummary.forecastTotal)}</span>
+             <span class="cost-detail">HP 0,2065 €/kWh · HC 0,1579 €/kWh · abo ${formatCurrency(HPHC_RATES.fixedPricePerMonth)}/mois</span>`
+          : "";
+        const electricityForecastCard = (hphcSummary?.forecastTotal || electricityForecast)
           ? `<div class="cost-item electricity forecast">
               <span class="cost-heading">
                 <span class="cost-label">Prévision</span>
-                <span class="cost-usage">${formatGraphMax(electricityForecast, "kWh")}</span>
+                <span class="cost-usage">${electricityForecastUsage}</span>
               </span>
               <span class="cost-price-row">
                 <span class="cost-value">${formatTotalCost(electricityForecastTotal, utilityRates.electricityMonthlyPaymentPrice)}</span>
               </span>
+              ${electricityForecastDetail}
             </div>`
           : "";
+        const hphcCard =
+          hphcSummary && (hphcSummary.hpConsumption > 0 || hphcSummary.hcConsumption > 0)
+            ? `<div class="cost-item electricity">
+                <span class="cost-heading">
+                  <span class="cost-label">⚡ HPHC</span>
+                  <span class="cost-usage">HP ${formatGraphMax(hphcSummary.hpConsumption, "kWh")} · HC ${formatGraphMax(hphcSummary.hcConsumption, "kWh")}</span>
+                </span>
+                <span class="cost-price-row">
+                  <span class="cost-value">${formatCurrency(hphcSummary.total)}</span>
+                </span>
+                <span class="cost-detail">${formatHphcProfitability(electricityTotal, hphcSummary.total)}</span>
+                <span class="cost-detail">HP 0,2065 €/kWh · HC 0,1579 €/kWh · abo ${formatCurrency(HPHC_RATES.fixedPricePerMonth)}/mois</span>
+              </div>`
+            : "";
+        const electricityCard = hphcCard || `<div class="cost-item electricity">
+            <span class="cost-heading">
+              <span class="cost-label">⚡ Élec.</span>
+              <span class="cost-usage">${formatGraphMax(electricityConsumption, "kWh")}</span>
+            </span>
+            <span class="cost-price-row">
+              <span class="cost-value">${formatTotalCost(electricityTotal, utilityRates.electricityMonthlyPaymentPrice)}</span>
+            </span>
+          </div>`;
 
         graphCostSummary.innerHTML = `
           <div class="cost-item water">
@@ -1538,15 +1694,7 @@
               <span class="cost-value">${formatTotalCost(waterTotal, utilityRates.waterMonthlyPaymentPrice)}</span>
             </span>
           </div>
-          <div class="cost-item electricity">
-            <span class="cost-heading">
-              <span class="cost-label">⚡ Élec.</span>
-              <span class="cost-usage">${formatGraphMax(electricityConsumption, "kWh")}</span>
-            </span>
-            <span class="cost-price-row">
-              <span class="cost-value">${formatTotalCost(electricityTotal, utilityRates.electricityMonthlyPaymentPrice)}</span>
-            </span>
-          </div>
+          ${electricityCard}
           ${waterForecastCard}
           ${electricityForecastCard}
         `;
@@ -1573,15 +1721,36 @@
 
         const waterData = buildConsumptionData(readings, "water", start, end);
         const electricityData = buildConsumptionData(readings, "electricity", start, end);
+        const electricityHpData = buildConsumptionData(readings, "electricity", start, end, (reading) => getElectricityPartReadingValue(reading, "hp"));
+        const electricityHcData = buildConsumptionData(readings, "electricity", start, end, (reading) => getElectricityPartReadingValue(reading, "hc"));
         const waterSeries = waterData.series;
         const electricitySeries = electricityData.series;
-        const waterForecast = getForecastTotal(waterData, start, end);
-        const electricityForecast = getForecastTotal(electricityData, start, end);
-        renderCostSummary(getSeriesTotal(waterSeries), getSeriesTotal(electricitySeries), waterForecast, electricityForecast);
+        const electricityHpSeries = electricityHpData.series;
+        const electricityHcSeries = electricityHcData.series;
+        const waterForecast = getForecastTotal(waterData, start);
+        const electricityForecast = getForecastTotal(electricityData, start);
+        const electricityHpForecast = getForecastTotal(electricityHpData, start);
+        const electricityHcForecast = getForecastTotal(electricityHcData, start);
+        const electricityHpTotal = getSeriesTotal(electricityHpSeries);
+        const electricityHcTotal = getSeriesTotal(electricityHcSeries);
+        const hphcSummary = isHphcModeEnabled
+          ? {
+              hpConsumption: electricityHpTotal,
+              hcConsumption: electricityHcTotal,
+              total: getHphcTotalCost(electricityHpTotal, electricityHcTotal),
+              hpForecast: electricityHpForecast,
+              hcForecast: electricityHcForecast,
+              forecastTotal: electricityHpForecast || electricityHcForecast ? getHphcTotalCost(electricityHpForecast, electricityHcForecast) : 0
+            }
+          : null;
+        renderCostSummary(getSeriesTotal(waterSeries), getSeriesTotal(electricitySeries), waterForecast, electricityForecast, hphcSummary);
         const waterMax = Math.max(...waterSeries.map((point) => point.value), 0);
         const electricityMax = Math.max(...electricitySeries.map((point) => point.value), 0);
+        const electricityHpMax = Math.max(...electricityHpSeries.map((point) => point.value), 0);
+        const electricityHcMax = Math.max(...electricityHcSeries.map((point) => point.value), 0);
+        const displayedElectricityMax = isHphcModeEnabled ? Math.max(electricityHpMax, electricityHcMax, 0) : electricityMax;
 
-        if (waterMax === 0 && electricityMax === 0) {
+        if (waterMax === 0 && displayedElectricityMax === 0) {
           graphFrame.innerHTML = '<p class="empty-state">Aucune consommation calculable pour ce mois.</p>';
           return;
         }
@@ -1595,10 +1764,28 @@
         const graphEndDay = new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
         const waterPoints = createPolyline(waterSeries, waterMax, chart, graphEndDay);
         const electricityPoints = createPolyline(electricitySeries, electricityMax, chart, graphEndDay);
+        const electricityHpPoints = createPolyline(electricityHpSeries, displayedElectricityMax, chart, graphEndDay);
+        const electricityHcPoints = createPolyline(electricityHcSeries, displayedElectricityMax, chart, graphEndDay);
         const waterMarkers = createPointCircles(waterSeries, waterMax, chart, graphEndDay, "#2563eb");
         const electricityMarkers = createPointCircles(electricitySeries, electricityMax, chart, graphEndDay, "#f59e0b");
+        const electricityHpMarkers = createPointCircles(electricityHpSeries, displayedElectricityMax, chart, graphEndDay, "#ea580c");
+        const electricityHcMarkers = createPointCircles(electricityHcSeries, displayedElectricityMax, chart, graphEndDay, "#fbbf24");
         const xAxisLabels = createXAxisLabels(chart, graphEndDay);
-
+        const electricitySeriesMarkup = isHphcModeEnabled
+          ? `${
+              electricityHpPoints
+                ? `<polyline points="${electricityHpPoints}" fill="none" stroke="#ea580c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />`
+                : ""
+            }${
+              electricityHcPoints
+                ? `<polyline points="${electricityHcPoints}" fill="none" stroke="#fbbf24" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />`
+                : ""
+            }${electricityHpMarkers}${electricityHcMarkers}`
+          : `${
+              electricityPoints
+                ? `<polyline points="${electricityPoints}" fill="none" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />`
+                : ""
+            }${electricityMarkers}`;
         graphFrame.innerHTML = `
           <svg viewBox="0 0 650 245" role="img" aria-label="Consommation mensuelle">
             <line x1="${chart.left}" y1="${chart.top}" x2="${chart.left}" y2="${chart.top + chart.height}" stroke="#cbd5e1" />
@@ -1606,7 +1793,7 @@
             <line x1="${chart.left}" y1="${chart.top + chart.height}" x2="${chart.left + chart.width}" y2="${chart.top + chart.height}" stroke="#cbd5e1" />
             <text x="8" y="${chart.top + 12}" fill="#2563eb" font-size="12">${formatGraphMax(waterMax, "m3")}</text>
             <text x="8" y="${chart.top + chart.height}" fill="#2563eb" font-size="12">${formatGraphMax(0, "m3")}</text>
-            <text x="642" y="${chart.top + 12}" fill="#b45309" font-size="12" text-anchor="end">${formatGraphMax(electricityMax, "kWh")}</text>
+            <text x="642" y="${chart.top + 12}" fill="#b45309" font-size="12" text-anchor="end">${formatGraphMax(displayedElectricityMax, "kWh")}</text>
             <text x="642" y="${chart.top + chart.height}" fill="#b45309" font-size="12" text-anchor="end">${formatGraphMax(0, "kWh")}</text>
             ${xAxisLabels}
             ${
@@ -1614,13 +1801,8 @@
                 ? `<polyline points="${waterPoints}" fill="none" stroke="#2563eb" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />`
                 : ""
             }
-            ${
-              electricityPoints
-                ? `<polyline points="${electricityPoints}" fill="none" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />`
-                : ""
-            }
+            ${electricitySeriesMarkup}
             ${waterMarkers}
-            ${electricityMarkers}
           </svg>
         `;
       }
@@ -1740,7 +1922,6 @@
         initDefaultDate();
         selectReadingType(payload.type);
         appCard.classList.add("hidden");
-        setMessage(readingMessage, "Relevé enregistré dans la base Supabase.", "success");
         loadReadings();
       }
 
@@ -1846,6 +2027,10 @@
         });
         nextMonthBtn.addEventListener("click", () => {
           changeGraphMonth(1);
+        });
+        hphcToggle.addEventListener("change", () => {
+          isHphcModeEnabled = hphcToggle.checked;
+          renderGraph(graphReadings);
         });
         readingForm.addEventListener("submit", handleReadingSubmit);
         readingsList.addEventListener("click", (event) => {
