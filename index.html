@@ -1077,6 +1077,7 @@
       async function loadUtilityRates() {
         utilityRates = { ...DEFAULT_UTILITY_RATES };
         if (!supabaseClient || !currentSession) {
+          updateHphcToggleVisibility();
           return;
         }
 
@@ -1087,6 +1088,7 @@
           .maybeSingle();
 
         if (error || !data) {
+          updateHphcToggleVisibility();
           return;
         }
 
@@ -1101,6 +1103,23 @@
           waterMonthlyPaymentPrice: Number.isFinite(Number(data.water_monthly_payment_price)) ? Number(data.water_monthly_payment_price) : DEFAULT_UTILITY_RATES.waterMonthlyPaymentPrice,
           electricityMonthlyPaymentPrice: Number.isFinite(Number(data.electricity_monthly_payment_price)) ? Number(data.electricity_monthly_payment_price) : DEFAULT_UTILITY_RATES.electricityMonthlyPaymentPrice
         };
+        updateHphcToggleVisibility();
+      }
+
+      function hasHphcRates() {
+        return utilityRates.electricityHphcFixedPricePerMonth > 0 && utilityRates.electricityHpPricePerKwh > 0 && utilityRates.electricityHcPricePerKwh > 0;
+      }
+
+      function updateHphcToggleVisibility() {
+        const canUseHphc = hasHphcRates();
+        const hphcToggleLabel = hphcToggle.closest(".hphc-toggle");
+        if (hphcToggleLabel) {
+          hphcToggleLabel.classList.toggle("hidden", !canUseHphc);
+        }
+        if (!canUseHphc) {
+          hphcToggle.checked = false;
+          isHphcModeEnabled = false;
+        }
       }
 
       async function handleAuthSubmit(event) {
@@ -1725,6 +1744,7 @@
 
       function renderGraph(readings = []) {
         graphReadings = readings;
+        updateHphcToggleVisibility();
         const availableMonthKeys = ensureSelectedGraphMonthHasData(readings);
         const selectedMonthKey = getMonthKey(selectedGraphMonth);
         const selectedMonthIndex = availableMonthKeys.indexOf(selectedMonthKey);
