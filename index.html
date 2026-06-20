@@ -872,13 +872,11 @@
         electricityPricePerKwh: 0.1940,
         waterFixedPricePerMonth: 20.20 / 6,
         electricityFixedPricePerMonth: 187.82 / 12,
+        electricityHphcFixedPricePerMonth: 189.96 / 12,
+        electricityHpPricePerKwh: 0.2065,
+        electricityHcPricePerKwh: 0.1579,
         waterMonthlyPaymentPrice: 0,
         electricityMonthlyPaymentPrice: 0
-      };
-      const HPHC_RATES = {
-        hpPricePerKwh: 0.2065,
-        hcPricePerKwh: 0.1579,
-        fixedPricePerMonth: 189.96 / 12
       };
 
       let supabaseClient = null;
@@ -1077,7 +1075,7 @@
 
         const { data, error } = await supabaseClient
           .from("profiles")
-          .select("water_price_per_m3,electricity_price_per_kwh,water_fixed_price_per_month,electricity_fixed_price_per_month,water_monthly_payment_price,electricity_monthly_payment_price")
+          .select("water_price_per_m3,electricity_price_per_kwh,water_fixed_price_per_month,electricity_fixed_price_per_month,electricity_hphc_fixed_price_per_month,electricity_hp_price_per_kwh,electricity_hc_price_per_kwh,water_monthly_payment_price,electricity_monthly_payment_price")
           .eq("id", currentSession.user.id)
           .maybeSingle();
 
@@ -1090,6 +1088,9 @@
           electricityPricePerKwh: Number.isFinite(Number(data.electricity_price_per_kwh)) ? Number(data.electricity_price_per_kwh) : DEFAULT_UTILITY_RATES.electricityPricePerKwh,
           waterFixedPricePerMonth: Number.isFinite(Number(data.water_fixed_price_per_month)) ? Number(data.water_fixed_price_per_month) : DEFAULT_UTILITY_RATES.waterFixedPricePerMonth,
           electricityFixedPricePerMonth: Number.isFinite(Number(data.electricity_fixed_price_per_month)) ? Number(data.electricity_fixed_price_per_month) : DEFAULT_UTILITY_RATES.electricityFixedPricePerMonth,
+          electricityHphcFixedPricePerMonth: Number.isFinite(Number(data.electricity_hphc_fixed_price_per_month)) ? Number(data.electricity_hphc_fixed_price_per_month) : DEFAULT_UTILITY_RATES.electricityHphcFixedPricePerMonth,
+          electricityHpPricePerKwh: Number.isFinite(Number(data.electricity_hp_price_per_kwh)) ? Number(data.electricity_hp_price_per_kwh) : DEFAULT_UTILITY_RATES.electricityHpPricePerKwh,
+          electricityHcPricePerKwh: Number.isFinite(Number(data.electricity_hc_price_per_kwh)) ? Number(data.electricity_hc_price_per_kwh) : DEFAULT_UTILITY_RATES.electricityHcPricePerKwh,
           waterMonthlyPaymentPrice: Number.isFinite(Number(data.water_monthly_payment_price)) ? Number(data.water_monthly_payment_price) : DEFAULT_UTILITY_RATES.waterMonthlyPaymentPrice,
           electricityMonthlyPaymentPrice: Number.isFinite(Number(data.electricity_monthly_payment_price)) ? Number(data.electricity_monthly_payment_price) : DEFAULT_UTILITY_RATES.electricityMonthlyPaymentPrice
         };
@@ -1618,7 +1619,7 @@
       }
 
       function getHphcTotalCost(hpConsumption, hcConsumption) {
-        return hpConsumption * HPHC_RATES.hpPricePerKwh + hcConsumption * HPHC_RATES.hcPricePerKwh + HPHC_RATES.fixedPricePerMonth;
+        return hpConsumption * utilityRates.electricityHpPricePerKwh + hcConsumption * utilityRates.electricityHcPricePerKwh + utilityRates.electricityHphcFixedPricePerMonth;
       }
 
       function renderCostSummary(waterConsumption, electricityConsumption, waterForecast, electricityForecast, hphcSummary = null) {
@@ -1646,7 +1647,7 @@
           : "";
         const electricityForecastDetail = hphcSummary?.forecastTotal
           ? `<span class="cost-detail">${formatHphcProfitability(electricityForecastVariableCost + utilityRates.electricityFixedPricePerMonth, hphcSummary.forecastTotal)}</span>
-             <span class="cost-detail">HP 0,2065 €/kWh · HC 0,1579 €/kWh · abo ${formatCurrency(HPHC_RATES.fixedPricePerMonth)}/mois</span>`
+             <span class="cost-detail">HP ${utilityRates.electricityHpPricePerKwh.toFixed(4)} €/kWh · HC ${utilityRates.electricityHcPricePerKwh.toFixed(4)} €/kWh · abo ${formatCurrency(utilityRates.electricityHphcFixedPricePerMonth)}/mois</span>`
           : "";
         const electricityForecastCard = (hphcSummary?.forecastTotal || electricityForecast)
           ? `<div class="cost-item electricity forecast">
@@ -1671,7 +1672,7 @@
                   <span class="cost-value">${formatCurrency(hphcSummary.total)}</span>
                 </span>
                 <span class="cost-detail">${formatHphcProfitability(electricityTotal, hphcSummary.total)}</span>
-                <span class="cost-detail">HP 0,2065 €/kWh · HC 0,1579 €/kWh · abo ${formatCurrency(HPHC_RATES.fixedPricePerMonth)}/mois</span>
+                <span class="cost-detail">HP ${utilityRates.electricityHpPricePerKwh.toFixed(4)} €/kWh · HC ${utilityRates.electricityHcPricePerKwh.toFixed(4)} €/kWh · abo ${formatCurrency(utilityRates.electricityHphcFixedPricePerMonth)}/mois</span>
               </div>`
             : "";
         const electricityCard = hphcCard || `<div class="cost-item electricity">
