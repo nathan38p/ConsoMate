@@ -1671,7 +1671,7 @@
         const waterForecastCard = waterForecast
           ? `<div class="cost-item water forecast">
               <span class="cost-heading">
-                <span class="cost-label">Prévision</span>
+                <span class="cost-label">Prév.</span>
                 <span class="cost-usage">${formatGraphMax(waterForecast, "m³")}</span>
               </span>
               <span class="cost-price-row">
@@ -1685,7 +1685,7 @@
         const electricityForecastCard = (hphcSummary?.forecastTotal || electricityForecast)
           ? `<div class="cost-item electricity forecast">
               <span class="cost-heading">
-                <span class="cost-label">Prévision</span>
+                <span class="cost-label">Prév.</span>
                 <span class="cost-usage">${electricityForecastUsage}</span>
               </span>
               <span class="cost-price-row">
@@ -1698,7 +1698,7 @@
           hphcSummary && (hphcSummary.hpConsumption > 0 || hphcSummary.hcConsumption > 0)
             ? `<div class="cost-item electricity">
                 <span class="cost-heading">
-                  <span class="cost-label">⚡ HPHC</span>
+                  <span class="cost-label">⚡</span>
                   <span class="cost-usage">${formatHphcUsage(hphcSummary.hpConsumption, hphcSummary.hcConsumption)}</span>
                 </span>
                 <span class="cost-price-row">
@@ -1709,7 +1709,7 @@
             : "";
         const electricityCard = hphcCard || `<div class="cost-item electricity">
             <span class="cost-heading">
-              <span class="cost-label">⚡ Élec.</span>
+              <span class="cost-label">⚡</span>
               <span class="cost-usage">${formatGraphMax(electricityConsumption, "kWh")}</span>
             </span>
             <span class="cost-price-row">
@@ -1720,7 +1720,7 @@
         graphCostSummary.innerHTML = `
           <div class="cost-item water">
             <span class="cost-heading">
-              <span class="cost-label">💧 Eau</span>
+              <span class="cost-label">💧</span>
               <span class="cost-usage">${formatGraphMax(waterConsumption, "m³")}</span>
             </span>
             <span class="cost-price-row">
