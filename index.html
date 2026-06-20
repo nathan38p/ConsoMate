@@ -551,7 +551,6 @@
 
       .hphc-label {
         display: inline-flex;
-        gap: 2px;
       }
 
       .hphc-toggle input:checked ~ .hphc-label .hphc-label-hp {
@@ -839,7 +838,6 @@
             <input id="hphc-toggle" type="checkbox" />
             <span class="hphc-label">
               <span class="hphc-label-hp">HP</span>
-              <span>/</span>
               <span class="hphc-label-hc">HC</span>
             </span>
             <span class="hphc-switch" aria-hidden="true"></span>
@@ -1620,7 +1618,11 @@
           return "0,00 €";
         }
 
-        return `${difference > 0 ? "-" : "+"}${formatCurrency(Math.abs(difference))}`;
+        return `${difference > 0 ? "📉" : "📈"} ${formatCurrency(Math.abs(difference))}`;
+      }
+
+      function formatHphcUsage(hpValue, hcValue) {
+        return `${Math.round(hpValue)} + ${Math.round(hcValue)} kWh`;
       }
 
       function getHphcTotalCost(hpConsumption, hcConsumption) {
@@ -1637,7 +1639,7 @@
         const waterForecastTotal = waterForecast ? waterForecastVariableCost + utilityRates.waterFixedPricePerMonth : 0;
         const electricityForecastTotal = hphcSummary?.forecastTotal || (electricityForecast ? electricityForecastVariableCost + utilityRates.electricityFixedPricePerMonth : 0);
         const electricityForecastUsage = hphcSummary?.forecastTotal
-          ? `HP ${formatGraphMax(hphcSummary.hpForecast, "kWh")} · HC ${formatGraphMax(hphcSummary.hcForecast, "kWh")}`
+          ? formatHphcUsage(hphcSummary.hpForecast, hphcSummary.hcForecast)
           : formatGraphMax(electricityForecast, "kWh");
         const waterForecastCard = waterForecast
           ? `<div class="cost-item water forecast">
@@ -1670,7 +1672,7 @@
             ? `<div class="cost-item electricity">
                 <span class="cost-heading">
                   <span class="cost-label">⚡ HPHC</span>
-                  <span class="cost-usage">HP ${formatGraphMax(hphcSummary.hpConsumption, "kWh")} · HC ${formatGraphMax(hphcSummary.hcConsumption, "kWh")}</span>
+                  <span class="cost-usage">${formatHphcUsage(hphcSummary.hpConsumption, hphcSummary.hcConsumption)}</span>
                 </span>
                 <span class="cost-price-row">
                   <span class="cost-value">${formatCurrency(hphcSummary.total)}</span>
