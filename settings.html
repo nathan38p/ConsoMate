@@ -172,7 +172,9 @@
       .rate-card {
         border: 1px solid var(--border);
         border-radius: 10px;
-        display: grid;
+        align-content: flex-start;
+        display: flex;
+        flex-direction: column;
         gap: 12px;
         padding: 12px;
       }
@@ -196,12 +198,14 @@
 
       .rate-fields {
         display: grid;
-        gap: 10px;
+        gap: 12px;
       }
 
       .rate-card label {
         color: inherit;
+        display: grid;
         font-size: 0.88rem;
+        gap: 6px;
       }
 
       .rate-card input {
@@ -411,6 +415,18 @@
                   <input id="electricity-price-kwh" type="number" inputmode="decimal" min="0" step="0.0001" required />
                 </label>
                 <label>
+                  Abonnement HP/HC
+                  <input id="electricity-hphc-fixed-price" type="number" inputmode="decimal" min="0" step="0.01" required />
+                </label>
+                <label>
+                  Prix kWh HP
+                  <input id="electricity-hp-price-kwh" type="number" inputmode="decimal" min="0" step="0.0001" required />
+                </label>
+                <label>
+                  Prix kWh HC
+                  <input id="electricity-hc-price-kwh" type="number" inputmode="decimal" min="0" step="0.0001" required />
+                </label>
+                <label>
                   Mensualisation
                   <input id="electricity-monthly-payment-price" type="number" inputmode="decimal" min="0" step="0.01" required />
                 </label>
@@ -462,6 +478,9 @@
         electricityPricePerKwh: 0.1940,
         waterFixedPricePerMonth: 20.20 / 6,
         electricityFixedPricePerMonth: 187.82 / 12,
+        electricityHphcFixedPricePerMonth: 189.96 / 12,
+        electricityHpPricePerKwh: 0.2065,
+        electricityHcPricePerKwh: 0.1579,
         waterMonthlyPaymentPrice: 0,
         electricityMonthlyPaymentPrice: 0
       };
@@ -480,6 +499,9 @@
       const waterPriceM3 = document.getElementById("water-price-m3");
       const electricityFixedPrice = document.getElementById("electricity-fixed-price");
       const electricityPriceKwh = document.getElementById("electricity-price-kwh");
+      const electricityHphcFixedPrice = document.getElementById("electricity-hphc-fixed-price");
+      const electricityHpPriceKwh = document.getElementById("electricity-hp-price-kwh");
+      const electricityHcPriceKwh = document.getElementById("electricity-hc-price-kwh");
       const waterMonthlyPaymentPrice = document.getElementById("water-monthly-payment-price");
       const electricityMonthlyPaymentPrice = document.getElementById("electricity-monthly-payment-price");
       const mateForm = document.getElementById("mate-form");
@@ -599,12 +621,15 @@
         waterPriceM3.value = formatRateInputValue(null, DEFAULT_UTILITY_RATES.waterPricePerM3, 4);
         electricityFixedPrice.value = formatRateInputValue(null, DEFAULT_UTILITY_RATES.electricityFixedPricePerMonth, 2);
         electricityPriceKwh.value = formatRateInputValue(null, DEFAULT_UTILITY_RATES.electricityPricePerKwh, 4);
+        electricityHphcFixedPrice.value = formatRateInputValue(null, DEFAULT_UTILITY_RATES.electricityHphcFixedPricePerMonth, 2);
+        electricityHpPriceKwh.value = formatRateInputValue(null, DEFAULT_UTILITY_RATES.electricityHpPricePerKwh, 4);
+        electricityHcPriceKwh.value = formatRateInputValue(null, DEFAULT_UTILITY_RATES.electricityHcPricePerKwh, 4);
         waterMonthlyPaymentPrice.value = formatRateInputValue(null, DEFAULT_UTILITY_RATES.waterMonthlyPaymentPrice, 2);
         electricityMonthlyPaymentPrice.value = formatRateInputValue(null, DEFAULT_UTILITY_RATES.electricityMonthlyPaymentPrice, 2);
 
         const { data, error } = await supabaseClient
           .from("profiles")
-          .select("first_name,water_price_per_m3,electricity_price_per_kwh,water_fixed_price_per_month,electricity_fixed_price_per_month,water_monthly_payment_price,electricity_monthly_payment_price")
+          .select("first_name,water_price_per_m3,electricity_price_per_kwh,water_fixed_price_per_month,electricity_fixed_price_per_month,electricity_hphc_fixed_price_per_month,electricity_hp_price_per_kwh,electricity_hc_price_per_kwh,water_monthly_payment_price,electricity_monthly_payment_price")
           .eq("id", currentSession.user.id)
           .maybeSingle();
 
@@ -617,6 +642,9 @@
           waterPriceM3.value = formatRateInputValue(data.water_price_per_m3, DEFAULT_UTILITY_RATES.waterPricePerM3, 4);
           electricityFixedPrice.value = formatRateInputValue(data.electricity_fixed_price_per_month, DEFAULT_UTILITY_RATES.electricityFixedPricePerMonth, 2);
           electricityPriceKwh.value = formatRateInputValue(data.electricity_price_per_kwh, DEFAULT_UTILITY_RATES.electricityPricePerKwh, 4);
+          electricityHphcFixedPrice.value = formatRateInputValue(data.electricity_hphc_fixed_price_per_month, DEFAULT_UTILITY_RATES.electricityHphcFixedPricePerMonth, 2);
+          electricityHpPriceKwh.value = formatRateInputValue(data.electricity_hp_price_per_kwh, DEFAULT_UTILITY_RATES.electricityHpPricePerKwh, 4);
+          electricityHcPriceKwh.value = formatRateInputValue(data.electricity_hc_price_per_kwh, DEFAULT_UTILITY_RATES.electricityHcPricePerKwh, 4);
           waterMonthlyPaymentPrice.value = formatRateInputValue(data.water_monthly_payment_price, DEFAULT_UTILITY_RATES.waterMonthlyPaymentPrice, 2);
           electricityMonthlyPaymentPrice.value = formatRateInputValue(data.electricity_monthly_payment_price, DEFAULT_UTILITY_RATES.electricityMonthlyPaymentPrice, 2);
         }
@@ -656,9 +684,12 @@
         const waterPriceM3Value = Number(waterPriceM3.value);
         const electricityFixedPriceValue = Number(electricityFixedPrice.value);
         const electricityPriceKwhValue = Number(electricityPriceKwh.value);
+        const electricityHphcFixedPriceValue = Number(electricityHphcFixedPrice.value);
+        const electricityHpPriceKwhValue = Number(electricityHpPriceKwh.value);
+        const electricityHcPriceKwhValue = Number(electricityHcPriceKwh.value);
         const waterMonthlyPaymentPriceValue = Number(waterMonthlyPaymentPrice.value);
         const electricityMonthlyPaymentPriceValue = Number(electricityMonthlyPaymentPrice.value);
-        const values = [waterFixedPriceValue, waterPriceM3Value, electricityFixedPriceValue, electricityPriceKwhValue, waterMonthlyPaymentPriceValue, electricityMonthlyPaymentPriceValue];
+        const values = [waterFixedPriceValue, waterPriceM3Value, electricityFixedPriceValue, electricityPriceKwhValue, electricityHphcFixedPriceValue, electricityHpPriceKwhValue, electricityHcPriceKwhValue, waterMonthlyPaymentPriceValue, electricityMonthlyPaymentPriceValue];
         if (values.some((value) => !Number.isFinite(value) || value < 0)) {
           setMessage(ratesMessage, "Saisissez uniquement des prix positifs.", "error");
           return;
@@ -671,6 +702,9 @@
           water_price_per_m3: waterPriceM3Value,
           electricity_fixed_price_per_month: electricityFixedPriceValue,
           electricity_price_per_kwh: electricityPriceKwhValue,
+          electricity_hphc_fixed_price_per_month: electricityHphcFixedPriceValue,
+          electricity_hp_price_per_kwh: electricityHpPriceKwhValue,
+          electricity_hc_price_per_kwh: electricityHcPriceKwhValue,
           water_monthly_payment_price: waterMonthlyPaymentPriceValue,
           electricity_monthly_payment_price: electricityMonthlyPaymentPriceValue
         });

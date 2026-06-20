@@ -29,6 +29,9 @@ create table if not exists public.profiles (
   electricity_price_per_kwh numeric not null default 0.1940,
   water_fixed_price_per_month numeric not null default (20.20 / 6),
   electricity_fixed_price_per_month numeric not null default (187.82 / 12),
+  electricity_hphc_fixed_price_per_month numeric not null default (189.96 / 12),
+  electricity_hp_price_per_kwh numeric not null default 0.2065,
+  electricity_hc_price_per_kwh numeric not null default 0.1579,
   water_monthly_payment_price numeric not null default 0,
   electricity_monthly_payment_price numeric not null default 0,
   created_at timestamptz not null default now()
@@ -80,6 +83,15 @@ add column if not exists water_fixed_price_per_month numeric not null default (2
 
 alter table public.profiles
 add column if not exists electricity_fixed_price_per_month numeric not null default (187.82 / 12);
+
+alter table public.profiles
+add column if not exists electricity_hphc_fixed_price_per_month numeric not null default (189.96 / 12);
+
+alter table public.profiles
+add column if not exists electricity_hp_price_per_kwh numeric not null default 0.2065;
+
+alter table public.profiles
+add column if not exists electricity_hc_price_per_kwh numeric not null default 0.1579;
 
 alter table public.profiles
 add column if not exists water_monthly_payment_price numeric not null default 0;
