@@ -862,7 +862,7 @@
 
       <section class="card hidden" id="readings-card">
         <div class="section-header">
-          <h2>Derniers relevés</h2>
+          <h2>Relevés du mois</h2>
         </div>
         <p id="reading-message" class="message"></p>
         <div id="readings-list" class="empty-state">Chargement…</div>
@@ -1351,6 +1351,7 @@
 
         setSelectedGraphMonthFromKey(nextMonthKey);
         renderGraph(graphReadings);
+        renderReadingsList(graphReadings);
       }
 
       function formatLocalDatetimeForDatabase(value) {
@@ -1842,6 +1843,54 @@
         `;
       }
 
+      function renderReadingsList(readings = []) {
+        const selectedMonthKey = getMonthKey(selectedGraphMonth);
+        const monthlyReadings = readings.filter((reading) => getReadingMonthKey(reading) === selectedMonthKey);
+
+        if (monthlyReadings.length === 0) {
+          readingsList.innerHTML = '<p class="empty-state">Aucun relevé enregistré pour ce mois.</p>';
+          return;
+        }
+
+        readingsList.innerHTML = monthlyReadings
+          .map((reading) => {
+            const typeLabel = reading.type === "water" ? "Eau" : "Électricité";
+            const typeClass = reading.type === "water" ? "water" : "electricity";
+            // const ownerLabel = profileLabelsById[reading.user_id] || (reading.user_id === currentSession.user.id ? "Moi" : "Mate");
+            const totalValue = getReadingTotalValue(reading);
+            const hasElectricityDetails = reading.type === "electricity" && reading.value_hp != null && reading.value_hc != null;
+            const readingDetail = hasElectricityDetails
+              ? `<div class="reading-detail">HC ${escapeHtml(formatMeterIndex(reading.value_hc))} kWh · HP ${escapeHtml(formatMeterIndex(reading.value_hp))} kWh</div>`
+              : "";
+            const deleteButton =
+              reading.user_id === currentSession.user.id
+                ? `<button type="button" class="danger delete-reading-btn" data-delete-reading-id="${escapeHtml(reading.id)}" aria-label="Supprimer" title="Supprimer">
+                    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M3 6h18" />
+                      <path d="M8 6V4h8v2" />
+                      <path d="M19 6l-1 14H6L5 6" />
+                      <path d="M10 11v5" />
+                      <path d="M14 11v5" />
+                    </svg>
+                  </button>`
+                : "";
+
+            return `
+              <article class="reading-item ${typeClass}">
+                <div class="reading-content">
+                  <strong>${typeLabel} — ${escapeHtml(totalValue)} ${escapeHtml(reading.unit)}</strong>
+                  ${readingDetail}
+                  <div class="reading-date">${escapeHtml(formatReadingDate(getReadingDatetime(reading)))}</div>
+                </div>
+                <div class="reading-footer">
+                  ${deleteButton}
+                </div>
+              </article>
+            `;
+          })
+          .join("");
+      }
+
       async function deleteReading(readingId) {
         if (!supabaseClient || !currentSession) {
           setMessage(readingMessage, "Vous devez être connecté pour supprimer un relevé.", "error");
@@ -1989,41 +2038,7 @@
         }
 
         renderGraph(data);
-        readingsList.innerHTML = data
-          .slice(0, 10)
-          .map((reading) => {
-            const typeLabel = reading.type === "water" ? "Eau" : "Électricité";
-            const typeClass = reading.type === "water" ? "water" : "electricity";
-            // const ownerLabel = profileLabelsById[reading.user_id] || (reading.user_id === currentSession.user.id ? "Moi" : "Mate");
-            const totalValue = getReadingTotalValue(reading);
-            const hasElectricityDetails = reading.type === "electricity" && reading.value_hp != null && reading.value_hc != null;
-            // Removed readingDetail declaration
-            const deleteButton =
-              reading.user_id === currentSession.user.id
-                ? `<button type="button" class="danger delete-reading-btn" data-delete-reading-id="${escapeHtml(reading.id)}" aria-label="Supprimer" title="Supprimer">
-                    <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M3 6h18" />
-                      <path d="M8 6V4h8v2" />
-                      <path d="M19 6l-1 14H6L5 6" />
-                      <path d="M10 11v5" />
-                      <path d="M14 11v5" />
-                    </svg>
-                  </button>`
-                : "";
-
-            return `
-              <article class="reading-item ${typeClass} ${hasElectricityDetails ? "clickable" : ""}" ${hasElectricityDetails ? `data-electricity-detail="HC ${escapeHtml(formatMeterIndex(reading.value_hc))} kWh\nHP ${escapeHtml(formatMeterIndex(reading.value_hp))} kWh"` : ""}>
-                <div class="reading-content">
-                  <strong>${typeLabel} — ${escapeHtml(totalValue)} ${escapeHtml(reading.unit)}</strong>
-                  <div class="reading-date">${escapeHtml(formatReadingDate(getReadingDatetime(reading)))}</div>
-                </div>
-                <div class="reading-footer">
-                  ${deleteButton}
-                </div>
-              </article>
-            `;
-          })
-          .join("");
+        renderReadingsList(data);
       }
 
       async function handleLogout() {
@@ -2073,12 +2088,6 @@
           if (deleteButton) {
             event.stopPropagation();
             deleteReading(deleteButton.dataset.deleteReadingId);
-            return;
-          }
-
-          const detailItem = event.target.closest("[data-electricity-detail]");
-          if (detailItem) {
-            window.alert(detailItem.dataset.electricityDetail);
           }
         });
         document.querySelectorAll("[data-reading-type]").forEach((button) => {
