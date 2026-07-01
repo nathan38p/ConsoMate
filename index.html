@@ -172,6 +172,22 @@
         border-radius: 10px;
         background: #2e2e2e;
         color: var(--text);
+        min-width: 0;
+        max-width: 100%;
+        appearance: none;
+        -webkit-appearance: none;
+      }
+
+      input[type="datetime-local"] {
+        display: block;
+        min-width: 0;
+        max-width: 100%;
+        width: 100%;
+      }
+
+      input[type="datetime-local"]::-webkit-date-and-time-value {
+        min-width: 0;
+        text-align: center;
       }
 
       .actions,
@@ -730,6 +746,12 @@
         .card {
           padding: 18px;
           margin-bottom: 12px;
+        }
+
+        input[type="datetime-local"] {
+          font-size: 1rem;
+          padding-left: 10px;
+          padding-right: 10px;
         }
 
         #graph-card {
