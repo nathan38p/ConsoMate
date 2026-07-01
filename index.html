@@ -1501,9 +1501,13 @@
 
         if (input.value) {
           const digitInputs = [...input.closest(".meter-input").querySelectorAll(".meter-digit")];
-          const nextInput = digitInputs[digitInputs.indexOf(input) + 1];
+          const currentIndex = digitInputs.indexOf(input);
+          const nextInput = digitInputs[currentIndex + 1];
+
           if (nextInput) {
             nextInput.focus();
+          } else if (digitInputs.every((field) => field.value.length === 1)) {
+            input.blur();
           }
         }
       }
