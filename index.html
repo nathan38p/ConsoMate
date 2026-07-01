@@ -27,6 +27,13 @@
 
       * {
         box-sizing: border-box;
+        overflow-wrap: break-word;
+      }
+
+      *,
+      *::before,
+      *::after {
+        max-width: 100%;
       }
 
       html,
@@ -49,12 +56,16 @@
         width: 100%;
         overscroll-behavior-x: none;
         overflow: hidden;
+        position: fixed;
+        inset: 0;
       }
 
       .container {
         display: flex;
         flex-direction: column;
-        height: 100dvh;
+        position: absolute;
+        inset: 0;
+        height: auto;
         margin: 0 auto;
         max-width: min(860px, 100%);
         overflow: hidden;
@@ -128,6 +139,7 @@
         overflow-y: auto;
         padding-bottom: calc(24px + env(safe-area-inset-bottom));
         -webkit-overflow-scrolling: touch;
+        overscroll-behavior-x: none;
       }
 
       .card h2 {
@@ -626,6 +638,7 @@
         height: auto;
         max-width: 100%;
         width: 100%;
+        overflow: hidden;
       }
 
       .cost-summary {
